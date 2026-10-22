@@ -84,7 +84,7 @@ export const useVolume = (profile: BabyProfile) =>
         return normalizeMl(oz ? ozToMl(num) : num);
       },
       presets: oz ? [2, 3, 4, 5, 6, 7] : [60, 90, 120, 150, 180, 210],
-      presetToMl: (value: number) => Math.round(oz ? ozToMl(value) : value),
+      presetToMl: (value: number) => Math.round((oz ? ozToMl(value) : value) * 10) / 10,
       presetLabel: (value: number) => (oz ? `${value} oz` : `${value} ml`),
       step: oz ? '0.5' : '5'
     };

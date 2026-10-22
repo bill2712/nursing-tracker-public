@@ -42,7 +42,26 @@ export const Settings: React.FC<{ data: AppData; links: SiteLinks }> = ({ data, 
   const [theme, setTheme] = useState<Theme>(readTheme);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => setProfile(data.profile), [data.profile]);
+  // When the saved profile changes (e.g. a unit was tapped), keep any unsaved edits to the form.
+  const savedRef = useRef(data.profile);
+  useEffect(() => {
+    const previous = savedRef.current;
+    savedRef.current = data.profile;
+    setProfile(draft => (JSON.stringify(draft) === JSON.stringify(previous)
+      ? data.profile
+      : { ...draft, weightUnit: data.profile.weightUnit, lengthUnit: data.profile.lengthUnit, volumeUnit: data.profile.volumeUnit }));
+  }, [data.profile]);
+
+  // Follow the theme toggle in the site header and changes from other tabs.
+  useEffect(() => {
+    const sync = () => setTheme(readTheme());
+    window.addEventListener('nt-theme', sync);
+    window.addEventListener('storage', sync);
+    return () => {
+      window.removeEventListener('nt-theme', sync);
+      window.removeEventListener('storage', sync);
+    };
+  }, []);
 
   const dirty = JSON.stringify(profile) !== JSON.stringify(data.profile);
   const setUnit = (patch: Partial<BabyProfile>) => actions.setProfile({ ...data.profile, ...patch });
@@ -56,7 +75,7 @@ export const Settings: React.FC<{ data: AppData; links: SiteLinks }> = ({ data, 
       if (!result) return showToast({ message: m.settings.importInvalid, tone: 'error' });
       if (result.logs === 0 && result.growth === 0) return showToast({ message: m.settings.importNothing });
       showToast({ message: m.settings.importDone(result.logs, result.growth) });
-    });
+    }).catch(() => showToast({ message: m.settings.importInvalid, tone: 'error' }));
   };
 
   const exportCsv = () => {

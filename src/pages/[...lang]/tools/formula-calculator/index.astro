@@ -12,7 +12,7 @@ const ui = useUi(locale);
 const f = ui.tools.formula;
 const all = await getGuides(locale);
 const guides = ['how-much-milk-does-a-newborn-need', 'burping-and-spit-up'].map(s => all.find(g => g.slug === s)).filter(Boolean) as Guide[];
-const labels = { weight: f.weight, age: f.age, ageUnit: f.ageUnit, feeds: f.feeds, dailyTotal: f.dailyTotal, perFeed: f.perFeed, range: f.range, perDay: f.perDay, months: Array.from({ length: 12 }, (_, n) => ui.milestones.monthShort(n)) };
+const labels = { weight: f.weight, age: f.age, ageUnit: f.ageUnit, feeds: f.feeds, dailyTotal: f.dailyTotal, perFeed: f.perFeed, range: f.range, perDay: f.perDay, newbornNote: f.newbornNote, months: Array.from({ length: 12 }, (_, n) => ui.milestones.monthShort(n)) };
 const jsonLd = [{
   '@context': 'https://schema.org',
   '@type': 'WebApplication',

@@ -6,7 +6,7 @@ const at = (d: number, h: number, min = 0) => new Date(2026, 7, d, h, min).getTi
 
 describe('normalizeMl', () => {
   it('accepts and rounds sensible amounts', () => {
-    expect(normalizeMl('42.6')).toBe(43);
+    expect(normalizeMl('42.64')).toBe(42.6);
     expect(normalizeMl(120)).toBe(120);
   });
   it('rejects empty, negative and excessive amounts', () => {
@@ -90,5 +90,17 @@ describe('getMilkGuideMl', () => {
 describe('toCsv', () => {
   it('escapes commas, quotes and new lines', () => {
     expect(toCsv(['a', 'b'], [['x,y', 'say "hi"\nok']])).toBe('﻿a,b\r\n"x,y","say ""hi""\nok"');
+    expect(toCsv(['n'], [['=1+1'], ['+1 extra feed'], ['-spit up']])).toBe("﻿n\r\n'=1+1\r\n'+1 extra feed\r\n'-spit up");
+  });
+});
+
+describe('snooze', () => {
+  it('counts time after a snooze ends even if the app was closed', () => {
+    const T = Date.UTC(2026, 0, 1);
+    const timer = { type: 'feeding' as const, startTime: T, details: {}, pauseStartTime: T + 20 * 60000, snoozeEndTime: T + 25 * 60000 };
+    expect(getTimerElapsedSeconds(timer, T + 60 * 60000)).toBe(55 * 60);
+    expect(getFinishedTimerTimes(timer, T + 60 * 60000).durationSeconds).toBe(55 * 60);
+    // Still snoozed: shows the time at the pause.
+    expect(getTimerElapsedSeconds(timer, T + 22 * 60000)).toBe(20 * 60);
   });
 });

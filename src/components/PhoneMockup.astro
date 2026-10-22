@@ -7,8 +7,8 @@ const { locale, alt } = Astro.props;
 // Example numbers shown in the illustration of the tracker's home screen.
 const labels = {
   en: { overview: 'Today', name: "Mia's day", feed: 'Last feed', feedAgo: '1 h 20 min ago', bath: 'Last sleep', bathAgo: '35 min ago', diaper: 'Last diaper', diaperAgo: '50 min ago', solids: 'Total intake', start: 'Start feeding', startSleep: 'Start sleep', wet: '💧 Wet', dirty: '💩 Dirty', mixed: '✨ Mixed', today: 'Today 6 feeds · 720 ml' },
-  'zh-hant': { overview: '今日概覽', name: '小寶 的照顧', feed: '上次餵奶', feedAgo: '1小時 20分鐘前', bath: '上次睡眠', bathAgo: '35分鐘前', diaper: '上次換片', diaperAgo: '50分鐘前', solids: '今日總食量', start: '開始餵奶', startSleep: '開始睡眠', wet: '💧 濕', dirty: '💩 便便', mixed: '✨ 混合', today: '今日 6 次 · 720 ml' },
-  'zh-hans': { overview: '今日概览', name: '小宝 的照顾', feed: '上次喂奶', feedAgo: '1小时 20分钟前', bath: '上次睡眠', bathAgo: '35分钟前', diaper: '上次换尿布', diaperAgo: '50分钟前', solids: '今日总摄入', start: '开始喂奶', startSleep: '开始睡眠', wet: '💧 尿湿', dirty: '💩 便便', mixed: '✨ 混合', today: '今日 6 次 · 720 ml' },
+  'zh-hant': { overview: '今日概覽', name: '小寶的一天', feed: '上次餵奶', feedAgo: '1小時 20分鐘前', bath: '上次睡眠', bathAgo: '35分鐘前', diaper: '上次換片', diaperAgo: '50分鐘前', solids: '今日總食量', start: '開始餵奶', startSleep: '開始睡眠', wet: '💧 濕', dirty: '💩 便便', mixed: '✨ 混合', today: '今日 6 次 · 720 ml' },
+  'zh-hans': { overview: '今日概览', name: '小宝的一天', feed: '上次喂奶', feedAgo: '1小时 20分钟前', bath: '上次睡眠', bathAgo: '35分钟前', diaper: '上次换尿布', diaperAgo: '50分钟前', solids: '今日总摄入', start: '开始喂奶', startSleep: '开始睡眠', wet: '💧 尿湿', dirty: '💩 便便', mixed: '✨ 混合', today: '今日 6 次 · 720 ml' },
   ja: { overview: '今日', name: 'はるちゃんの記録', feed: '前回の授乳', feedAgo: '1時間20分前', bath: '前回の睡眠', bathAgo: '35分前', diaper: '前回のおむつ', diaperAgo: '50分前', solids: '今日の合計', start: '授乳を開始', startSleep: '睡眠を開始', wet: '💧 おしっこ', dirty: '💩 うんち', mixed: '✨ 両方', today: '今日 6回 · 720 ml' }
 }[locale];
 ---

@@ -18,11 +18,11 @@ export const lbToKg = (lb: number) => lb / 2.20462;
 export const cmToIn = (cm: number) => cm / 2.54;
 export const inToCm = (inches: number) => inches * 2.54;
 
-/** A sensible millilitre amount (1–2000), rounded, or null. */
+/** A sensible millilitre amount (up to 2000), to 0.1 ml so oz amounts round-trip, or null. */
 export const normalizeMl = (value: unknown, max = 2000): number | null => {
   const amount = typeof value === 'string' && value.trim() === '' ? NaN : Number(value);
   if (!Number.isFinite(amount) || amount <= 0 || amount > max) return null;
-  return Math.round(amount);
+  return Math.round(amount * 10) / 10;
 };
 
 export const formatTimer = (totalSeconds: number): string => {
@@ -51,9 +51,17 @@ export const fromLocalDateInput = (value: string): number | null => {
 export const dayKey = (timestamp: number): string => toLocalDateInput(timestamp);
 
 /** Elapsed seconds shown on a running timer. */
+/** A snooze that has already ended counts as resumed at its end time, even if the app was closed. */
+export const resolveSnooze = <T extends Pick<ActiveTimer, 'pauseStartTime' | 'snoozeEndTime' | 'ignoredDurationMs'>>(timer: T, now: number = Date.now()): T => {
+  if (!timer.snoozeEndTime || !timer.pauseStartTime || timer.snoozeEndTime > now) return timer;
+  const { pauseStartTime, snoozeEndTime, ...running } = timer;
+  return { ...running, ignoredDurationMs: (timer.ignoredDurationMs || 0) + Math.max(0, snoozeEndTime - pauseStartTime) } as T;
+};
+
 export const getTimerElapsedSeconds = (timer: ActiveTimer, now: number = Date.now()): number => {
-  const end = timer.pauseStartTime || now;
-  return Math.floor((end - timer.startTime - (timer.ignoredDurationMs || 0) + (timer.addedDurationMs || 0)) / 1000);
+  const current = resolveSnooze(timer, now);
+  const end = current.pauseStartTime || now;
+  return Math.floor((end - current.startTime - (current.ignoredDurationMs || 0) + (current.addedDurationMs || 0)) / 1000);
 };
 
 /**
@@ -62,13 +70,14 @@ export const getTimerElapsedSeconds = (timer: ActiveTimer, now: number = Date.no
  * moves the start earlier so the saved start/end span shows it too.
  */
 export const getFinishedTimerTimes = (
-  timer: Pick<ActiveTimer, 'startTime' | 'pauseStartTime' | 'ignoredDurationMs' | 'addedDurationMs'>,
+  timer: Pick<ActiveTimer, 'startTime' | 'pauseStartTime' | 'snoozeEndTime' | 'ignoredDurationMs' | 'addedDurationMs'>,
   now: number = Date.now()
 ) => {
-  const endTime = timer.pauseStartTime || now;
-  const addedMs = Math.max(0, timer.addedDurationMs || 0);
-  const startTime = timer.startTime - addedMs;
-  const durationSeconds = Math.floor((endTime - startTime - (timer.ignoredDurationMs || 0)) / 1000);
+  const current = resolveSnooze(timer, now);
+  const endTime = current.pauseStartTime || now;
+  const addedMs = Math.max(0, current.addedDurationMs || 0);
+  const startTime = current.startTime - addedMs;
+  const durationSeconds = Math.floor((endTime - startTime - (current.ignoredDurationMs || 0)) / 1000);
   return { startTime, endTime, durationSeconds };
 };
 
@@ -116,7 +125,8 @@ export const getTrackerSummary = (logs: LogEntry[], now: number = Date.now()): T
   const t = summary.today;
 
   for (const log of logs) {
-    if (log.type in { feeding: 1, sleep: 1, bath: 1, pumping: 1, diaper: 1, solids: 1 }) {
+    // A future time is usually a typo; it should not show up as the latest entry.
+    if (log.type in { feeding: 1, sleep: 1, bath: 1, pumping: 1, diaper: 1, solids: 1 } && log.startTime <= now) {
       const kind = log.type as LastKind;
       const previous = summary.last[kind];
       if (!previous || log.startTime > previous.startTime) summary.last[kind] = log;
@@ -253,6 +263,10 @@ export const downloadFile = (content: string, filename: string, type: string) =>
 };
 
 export const toCsv = (header: string[], rows: string[][]): string => {
-  const escape = (value: string) => (/[",\n\r]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value);
+  const escape = (raw: string) => {
+    // A leading = + - @ makes spreadsheet apps run the cell as a formula.
+    const value = /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw;
+    return /[",\n\r]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
+  };
   return `﻿${[header, ...rows].map(row => row.map(escape).join(',')).join('\r\n')}`;
 };

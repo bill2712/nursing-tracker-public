@@ -8,7 +8,10 @@ import { fromLocalDateInput, toLocalDateInput } from '../utils';
 
 export const Onboarding: React.FC<{ profile: BabyProfile; defaultVolume: 'ml' | 'oz' }> = ({ profile, defaultVolume }) => {
   const { m } = useI18n();
-  const [draft, setDraft] = useState<BabyProfile>({ ...profile, volumeUnit: profile.volumeUnit || defaultVolume });
+  // Only shown before setup, so the profile still has the defaults: use US units for US English.
+  const [draft, setDraft] = useState<BabyProfile>(() => (defaultVolume === 'oz'
+    ? { ...profile, volumeUnit: 'oz', weightUnit: 'lb', lengthUnit: 'in' }
+    : { ...profile, volumeUnit: defaultVolume }));
   const fileRef = useRef<HTMLInputElement>(null);
   const finish = () => actions.completeOnboarding(draft);
 
@@ -20,12 +23,13 @@ export const Onboarding: React.FC<{ profile: BabyProfile; defaultVolume: 'ml' | 
           <button type="button" className="nt-btn w-full text-sm text-[var(--nt-muted)]" onClick={() => fileRef.current?.click()}>{m.onboarding.restore}</button>
           <input ref={fileRef} type="file" accept="application/json,.json" className="hidden" onChange={event => {
             const file = event.target.files?.[0];
+            event.target.value = '';
             if (!file) return;
             file.text().then(text => {
               const result = actions.importBackup(text);
               if (!result) showToast({ message: m.settings.importInvalid, tone: 'error' });
               else showToast({ message: m.settings.importDone(result.logs, result.growth) });
-            });
+            }).catch(() => showToast({ message: m.settings.importInvalid, tone: 'error' }));
           }} />
         </div>
       }>

@@ -51,6 +51,7 @@ export const LogForm: React.FC<LogFormProps> = ({ profile, entry, defaultType = 
   const [error, setError] = useState('');
 
   const timed = isTimedType(type);
+  const maxInput = toLocalInput(now + 5 * 60000);
   const patch = (update: Partial<LogDetails>) => setDetails(previous => ({ ...previous, ...update }));
 
   const chooseType = (next: ActivityType) => {
@@ -74,10 +75,21 @@ export const LogForm: React.FC<LogFormProps> = ({ profile, entry, defaultType = 
   };
 
   const save = () => {
-    const startTs = new Date(start).getTime();
-    const endTs = timed ? new Date(end).getTime() : undefined;
+    // Keep the exact saved times (with seconds and paused time left out) unless the user changed them.
+    const startUnchanged = !!entry && start === toLocalInput(entry.startTime);
+    const endUnchanged = entry?.endTime !== undefined && end === toLocalInput(entry.endTime);
+    const startTs = startUnchanged ? entry!.startTime : new Date(start).getTime();
+    const endTs = timed ? (endUnchanged ? entry!.endTime! : new Date(end).getTime()) : undefined;
     if (!Number.isFinite(startTs) || (timed && !Number.isFinite(endTs))) return setError(m.form.pickTime);
+    // Allow a few minutes of clock difference, but catch a wrong day or AM/PM.
+    const latest = Date.now() + 5 * 60000;
+    if ((!startUnchanged && startTs > latest) || (timed && !endUnchanged && (endTs as number) > latest)) return setError(m.form.futureTime);
     if (timed && (endTs as number) <= startTs) return setError(m.form.endBeforeStart);
+    const durationSeconds = timed
+      ? startUnchanged && endUnchanged && entry?.durationSeconds && entry.type === type
+        ? entry.durationSeconds
+        : Math.round(((endTs as number) - startTs) / 1000)
+      : undefined;
 
     const next: LogDetails = { ...details };
     const needsAmount = type === 'pumping' || type === 'solids' || (type === 'feeding' && details.feedingType === 'bottle');
@@ -98,7 +110,7 @@ export const LogForm: React.FC<LogFormProps> = ({ profile, entry, defaultType = 
       id: entry?.id ?? generateId(),
       type,
       startTime: startTs,
-      ...(timed ? { endTime: endTs, durationSeconds: Math.round(((endTs as number) - startTs) / 1000) } : {}),
+      ...(timed ? { endTime: endTs, durationSeconds } : {}),
       details: clean(next)
     };
     actions.saveLog(log);
@@ -151,11 +163,11 @@ export const LogForm: React.FC<LogFormProps> = ({ profile, entry, defaultType = 
             <div className="grid grid-cols-2 gap-2">
               <label>
                 <span className="nt-label">{m.form.start}</span>
-                <input type="datetime-local" className="nt-input text-sm" value={start} onChange={e => setStart(e.target.value)} />
+                <input type="datetime-local" className="nt-input text-sm" value={start} max={maxInput} onChange={e => setStart(e.target.value)} />
               </label>
               <label>
                 <span className="nt-label">{m.form.end}</span>
-                <input type="datetime-local" className="nt-input text-sm" value={end} onChange={e => setEnd(e.target.value)} />
+                <input type="datetime-local" className="nt-input text-sm" value={end} max={maxInput} onChange={e => setEnd(e.target.value)} />
               </label>
             </div>
             <div>
@@ -174,7 +186,7 @@ export const LogForm: React.FC<LogFormProps> = ({ profile, entry, defaultType = 
         ) : (
           <label className="block">
             <span className="nt-label">{m.form.time}</span>
-            <input type="datetime-local" className="nt-input text-sm" value={start} onChange={e => setStart(e.target.value)} />
+            <input type="datetime-local" className="nt-input text-sm" value={start} max={maxInput} onChange={e => setStart(e.target.value)} />
           </label>
         )}
 

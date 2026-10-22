@@ -7,6 +7,7 @@ import { onPersistError, useAppData } from './store';
 import { loadDevelopment, type DevMonth } from '../data/development';
 import { monthSlug } from '../lib/milestones';
 import { ToastHost, showToast } from './components/Toast';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { Today } from './components/Today';
 import { History } from './components/History';
 import { Development } from './components/Development';
@@ -15,8 +16,10 @@ import { Onboarding } from './components/Onboarding';
 import { BabyIcon, BarChartIcon, ClockIcon, ListIcon, RulerIcon, SettingsIcon } from './components/Icons';
 
 // Chart screens load on demand so the Today screen opens quickly.
-const Trends = lazy(() => import('./components/Trends').then(mod => ({ default: mod.Trends })));
-const Health = lazy(() => import('./components/Health').then(mod => ({ default: mod.Health })));
+const loadTrends = () => import('./components/Trends').then(mod => ({ default: mod.Trends }));
+const loadHealth = () => import('./components/Health').then(mod => ({ default: mod.Health }));
+const Trends = lazy(loadTrends);
+const Health = lazy(loadHealth);
 
 type Tab = 'today' | 'history' | 'trends' | 'growth' | 'development' | 'settings';
 const TABS: Tab[] = ['today', 'history', 'trends', 'growth', 'development', 'settings'];
@@ -32,7 +35,16 @@ interface AppRootProps {
   milestonesBase: string;
   monthLabels: Record<number, string>;
   loadingLabel: string;
+  errorLabel: string;
+  retryLabel: string;
 }
+
+const LoadError: React.FC<{ text: string; retryLabel: string; onRetry: () => void }> = ({ text, retryLabel, onRetry }) => (
+  <div className="flex h-[60vh] flex-col items-center justify-center gap-4 px-6 text-center text-sm font-semibold text-[var(--nt-muted)]">
+    <p>{text}</p>
+    <button type="button" className="nt-btn nt-btn-dark" onClick={onRetry}>{retryLabel}</button>
+  </div>
+);
 
 const useDarkMode = () => {
   const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'));
@@ -44,10 +56,11 @@ const useDarkMode = () => {
   return dark;
 };
 
-const AppRoot: React.FC<AppRootProps> = ({ locale, links, milestonesBase, monthLabels, loadingLabel }) => {
+const AppRoot: React.FC<AppRootProps> = ({ locale, links, milestonesBase, monthLabels, loadingLabel, errorLabel, retryLabel }) => {
   const [messages, setMessages] = useState<AppMessages | null>(null);
   const [months, setMonths] = useState<DevMonth[] | null>(null);
   const [tab, setTab] = useState<Tab>(tabFromHash);
+  const [loadFailed, setLoadFailed] = useState(false);
   const data = useAppData();
   const dark = useDarkMode();
 
@@ -56,11 +69,11 @@ const AppRoot: React.FC<AppRootProps> = ({ locale, links, milestonesBase, monthL
     Promise.all([loadMessages(locale), loadDevelopment(locale)]).then(([msgs, dev]) => {
       if (!alive) return;
       // Warm the chart screens in the background once the app is ready.
-      window.setTimeout(() => { import('./components/Trends'); import('./components/Health'); }, 1500);
+      window.setTimeout(() => { import('./components/Trends').catch(() => {}); import('./components/Health').catch(() => {}); }, 1500);
       setMessages(msgs);
       setMonths(dev);
       onPersistError(() => showToast({ message: msgs.today.storageError, tone: 'error', durationMs: 8000 }));
-    });
+    }).catch(() => { if (alive) setLoadFailed(true); });
     return () => { alive = false; };
   }, [locale]);
 
@@ -81,6 +94,8 @@ const AppRoot: React.FC<AppRootProps> = ({ locale, links, milestonesBase, monthL
     setTab(next);
     document.querySelector('.nt-app-main')?.scrollTo({ top: 0 });
   };
+
+  if (loadFailed) return <LoadError text={errorLabel} retryLabel={retryLabel} onRetry={() => window.location.reload()} />;
 
   if (!messages || !months) {
     return (
@@ -106,6 +121,9 @@ const AppRoot: React.FC<AppRootProps> = ({ locale, links, milestonesBase, monthL
     <I18nProvider messages={messages} locale={locale}>
       <div className="nt-app">
         <div className="nt-app-main no-scrollbar">
+          <ErrorBoundary key={tab} fallback={() => (
+            <LoadError text={errorLabel} retryLabel={retryLabel} onRetry={() => window.location.reload()} />
+          )}>
           <Suspense fallback={<div className="flex h-60 items-center justify-center"><div className="nt-spinner" aria-hidden="true" /></div>}>
           {tab === 'today' && <Today data={data} onBackup={downloadBackup} />}
           {tab === 'history' && <History data={data} />}
@@ -117,6 +135,7 @@ const AppRoot: React.FC<AppRootProps> = ({ locale, links, milestonesBase, monthL
           )}
           {tab === 'settings' && <Settings data={data} links={links} />}
           </Suspense>
+          </ErrorBoundary>
         </div>
         <nav className="nt-bottom-nav safe-area-pb" aria-label={m.settings.more}>
           {nav.map(item => (

@@ -10,6 +10,8 @@ export interface FormulaLabels {
   perFeed: string;
   range: string;
   perDay: string;
+  /** Shown for newborns: the first week is different. */
+  newbornNote: string;
   /** Display labels for ages 0–11 months. */
   months: string[];
 }
@@ -21,7 +23,9 @@ const FormulaCalculator: React.FC<{ labels: FormulaLabels; defaultUnit: 'metric'
   const [imperial, setImperial] = useState(defaultUnit === 'imperial');
   const [weight, setWeight] = useState(defaultUnit === 'imperial' ? '9' : '4.2');
   const [age, setAge] = useState(1);
-  const [feeds, setFeeds] = useState(defaultFeeds(1));
+  // Keep the raw text so the field can be cleared and retyped; clamp only for the result.
+  const [feedsInput, setFeedsInput] = useState(String(defaultFeeds(1)));
+  const feeds = Math.max(1, Math.min(14, parseInt(feedsInput, 10) || defaultFeeds(age)));
 
   const kg = imperial ? lbToKg(parseFloat(weight)) : parseFloat(weight);
   const guide = useMemo(() => (kg > 0 && kg < 30 ? getMilkGuideMl(kg, age) : null), [kg, age]);
@@ -43,7 +47,7 @@ const FormulaCalculator: React.FC<{ labels: FormulaLabels; defaultUnit: 'metric'
         </label>
         <label className="block">
           <span className="field-label">{labels.age}</span>
-          <select className="field" value={age} onChange={e => { const next = Number(e.target.value); setAge(next); setFeeds(defaultFeeds(next)); }}>
+          <select className="field" value={age} onChange={e => { const next = Number(e.target.value); setAge(next); setFeedsInput(String(defaultFeeds(next))); }}>
             {Array.from({ length: 12 }, (_, i) => i).map(month => (
               <option key={month} value={month}>{labels.months[month]}</option>
             ))}
@@ -51,7 +55,7 @@ const FormulaCalculator: React.FC<{ labels: FormulaLabels; defaultUnit: 'metric'
         </label>
         <label className="block">
           <span className="field-label">{labels.feeds}</span>
-          <input className="field" type="number" inputMode="numeric" min="1" max="14" value={feeds} onChange={e => setFeeds(Math.max(1, Math.min(14, parseInt(e.target.value, 10) || 1)))} />
+          <input className="field" type="number" inputMode="numeric" min="1" max="14" value={feedsInput} onChange={e => setFeedsInput(e.target.value)} onBlur={() => setFeedsInput(String(feeds))} />
         </label>
       </div>
 
@@ -67,6 +71,7 @@ const FormulaCalculator: React.FC<{ labels: FormulaLabels; defaultUnit: 'metric'
           {guide && <p className="mt-1 text-sm font-semibold muted">× {feeds}</p>}
         </div>
       </div>
+      {age === 0 && <p className="notice mt-4 text-sm">{labels.newbornNote}</p>}
     </div>
   );
 };

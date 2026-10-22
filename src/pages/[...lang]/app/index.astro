@@ -34,7 +34,7 @@ const jsonLd = [{
 ---
 <Base locale={locale} title={ui.appPage.metaTitle} description={ui.appPage.metaDescription} page="/app/" variant="app" jsonLd={jsonLd}>
   <h1 class="sr-only">{ui.appPage.metaTitle}</h1>
-  <AppRoot client:only="react" locale={locale} links={links} milestonesBase={localePath(locale, '/milestones/')} monthLabels={monthLabels} loadingLabel={ui.appPage.loading} />
+  <AppRoot client:only="react" locale={locale} links={links} milestonesBase={localePath(locale, '/milestones/')} monthLabels={monthLabels} loadingLabel={ui.appPage.loading} errorLabel={ui.appPage.loadError} retryLabel={ui.appPage.retry} />
   <noscript>
     <div class="container-page py-16 text-center">
       <p class="text-lg font-bold">{ui.appPage.noscript}</p>

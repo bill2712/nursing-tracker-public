@@ -2,6 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { cmToIn, getAgeInMonths, inToCm, lbToKg, toLocalDateInput, fromLocalDateInput } from '../app/utils';
 import { formatPercentile, getPercentile, type Indicator } from '../app/who';
 import type { Sex } from '../app/types';
+import type { Locale } from '../i18n/locales';
+import { percentileLabel } from '../i18n/percentile';
 
 export interface GrowthLabels {
   sex: string;
@@ -16,8 +18,6 @@ export interface GrowthLabels {
   result: string;
   /** Contains {months}. */
   ageTemplate: string;
-  /** Contains {p}. */
-  percentileTemplate: string;
   explainTitle: string;
   /** Contains {p}. */
   explainTemplate: string;
@@ -28,7 +28,7 @@ export interface GrowthLabels {
 const fill = (template: string, values: Record<string, string>) => template.replace(/\{(\w+)\}/g, (_, key) => values[key] ?? '');
 
 /** WHO percentile calculator. Values stay in the browser; nothing is saved. */
-const GrowthCalculator: React.FC<{ labels: GrowthLabels; defaultUnit: 'metric' | 'imperial' }> = ({ labels, defaultUnit }) => {
+const GrowthCalculator: React.FC<{ labels: GrowthLabels; defaultUnit: 'metric' | 'imperial'; locale: Locale }> = ({ labels, defaultUnit, locale }) => {
   const today = toLocalDateInput(Date.now());
   const sixMonthsAgo = toLocalDateInput(Date.now() - 182 * 86400000);
   const [imperial, setImperial] = useState(defaultUnit === 'imperial');
@@ -98,7 +98,7 @@ const GrowthCalculator: React.FC<{ labels: GrowthLabels; defaultUnit: 'metric' |
             <div key={row.indicator} className={`${out ? 'notice' : 'callout'} p-4`}>
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <span className="font-black">{row.label}</span>
-                <span className="text-2xl font-black tabular-nums">{p === null ? '—' : fill(labels.percentileTemplate, { p: formatPercentile(p) })}</span>
+                <span className="text-2xl font-black tabular-nums">{p === null ? '—' : percentileLabel[locale](formatPercentile(p))}</span>
               </div>
               {row.outOfAge && <p className="mt-1 text-sm">{labels.ageOutOfRange}</p>}
               {p !== null && <p className="mt-1 text-sm">{out ? labels.outOfRange : fill(labels.explainTemplate, { p: formatPercentile(p).replace(/[<>]/g, '') })}</p>}

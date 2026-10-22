@@ -14,7 +14,7 @@ interface Props {
   locale: Locale;
   title: string;
   description: string;
-  /** Locale-neutral path of this page, e.g. "/guides/newborn-sleep/". */
+  /** Locale-neutral path of this page, e.g. "/guides/newborn-sleep/". Language links use it too. */
   page: string;
   jsonLd?: Record<string, unknown>[];
   ogType?: 'website' | 'article';
@@ -50,7 +50,7 @@ if (breadcrumbs?.length) {
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <link rel="canonical" href={canonical} />
+    {!noindex && <link rel="canonical" href={canonical} />}
     {noindex && <meta name="robots" content="noindex, follow" />}
     {!noindex && LOCALES.map(alt => (
       <link rel="alternate" hreflang={LOCALE_META[alt].hreflang} href={absoluteUrl(localePath(alt, page))} />
@@ -61,7 +61,7 @@ if (breadcrumbs?.length) {
     <meta property="og:site_name" content={BRAND} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:url" content={canonical} />
+    {!noindex && <meta property="og:url" content={canonical} />}
     <meta property="og:image" content={ogImage} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -89,6 +89,12 @@ if (breadcrumbs?.length) {
           var theme = localStorage.getItem('nt-theme');
           var dark = theme ? theme === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
           if (dark) document.documentElement.classList.add('dark');
+          // On "Auto", follow the system when it switches between light and dark.
+          window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (event) {
+            if (localStorage.getItem('nt-theme')) return;
+            document.documentElement.classList.toggle('dark', event.matches);
+            window.dispatchEvent(new CustomEvent('nt-theme', { detail: event.matches }));
+          });
         } catch (e) {}
       })();
     </script>
@@ -97,7 +103,7 @@ if (breadcrumbs?.length) {
   <body class={variant === 'app' ? 'min-h-[100dvh]' : 'flex min-h-screen flex-col'}>
     <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[60] focus:rounded-xl focus:bg-white focus:px-4 focus:py-2 focus:font-bold focus:text-pink-700">{ui.skipToContent}</a>
     <Header locale={locale} page={page} compact={variant === 'app'} />
-    {variant !== 'app' && <LanguageSuggest locale={locale} page={page} />}
+    {variant !== 'app' && !noindex && <LanguageSuggest locale={locale} page={page} />}
     <main id="main" class={variant === 'app' ? '' : 'flex-1'}>
       <slot />
     </main>

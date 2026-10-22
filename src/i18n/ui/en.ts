@@ -18,6 +18,8 @@ const en = {
   themeToggle: 'Toggle dark mode',
   menu: 'Menu',
   breadcrumbHome: 'Home',
+  breadcrumbLabel: 'Breadcrumb',
+  summaryLabel: 'Summary',
   footer: {
     about: 'A free, private baby tracker for feeding, sleep, diapers, growth and development. No sign-up, no ads — your data stays on your device.',
     disclaimer: 'NurtureTrack provides general information only and is not a substitute for advice from a doctor, midwife or health visitor. If you are worried about your baby, contact a health professional. In an emergency, call your local emergency number.',
@@ -207,13 +209,14 @@ const en = {
       perFeed: 'Per feed',
       range: 'Typical range',
       perDay: 'per day',
+      newbornNote: 'In the first days babies drink much less — about 15–30 ml (½–1 oz) per feed on days 1–2, building up over the first week. This estimate fits babies from about one week old.',
       note: 'Based on the common guideline of about 150 ml per kg per day (2.5 oz per lb) for formula-fed babies up to around 6 months, capped at about 1,000 ml (32 oz) per day. From 6 months, as solids increase, milk needs fall gradually. Breastfed babies should be fed on demand — follow your baby’s hunger and fullness cues.',
       howTitle: 'How this calculator works',
       how: [
         'Most formula-fed babies under 6 months drink about 150 ml of milk per kilogram of body weight per day, with a normal range of roughly 120–180 ml/kg.',
         'The daily total is divided by the number of feeds. Newborns usually feed 8–12 times in 24 hours; by 3–4 months many babies take 5–6 larger feeds.',
         'Babies rarely need more than about 1,000 ml (32 oz) of formula a day. If your baby regularly wants much more or much less, talk to your health visitor or doctor.',
-        'After 6 months, solid food gradually replaces some milk. Around 500–600 ml of milk a day alongside solids is typical at 7–12 months.'
+        'After 6 months, solid food gradually replaces some milk. Around 500–700 ml of milk a day alongside solids is typical at 7–12 months.'
       ],
       cuesTitle: 'Hunger and fullness cues',
       cues: [
@@ -238,7 +241,6 @@ const en = {
       optional: 'optional',
       result: 'Percentile',
       ageResult: (months: string) => `Age: ${months} months`,
-      percentileText: (p: string) => `${p}th percentile`,
       explainTitle: 'What does the percentile mean?',
       explain: (p: string) => `Out of 100 healthy children of the same age and sex, about ${p} would be smaller and the rest larger. Any percentile between the 3rd and 97th is within the normal WHO range.`,
       outOfRange: 'This value is outside the 3rd–97th percentile range. That can be normal for some children, but it is worth discussing with your doctor or health visitor.',
@@ -255,6 +257,8 @@ const en = {
     metaTitle: 'Baby tracker app — log feeds, sleep & diapers | NurtureTrack',
     metaDescription: 'Open the free NurtureTrack baby tracker in your browser. Log feeding, sleep, diapers, pumping and solids, see daily totals and WHO growth charts. No sign-up.',
     loading: 'Loading the tracker…',
+    loadError: 'This part of the tracker couldn’t load. Check your connection and try again. Your records are safe.',
+    retry: 'Try again',
     noscript: 'The tracker needs JavaScript. Please enable it in your browser settings.'
   },
   notFound: {

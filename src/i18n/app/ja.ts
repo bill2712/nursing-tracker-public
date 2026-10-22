@@ -1,3 +1,4 @@
+import { percentileLabel } from '../percentile';
 import type { AppMessages } from './en';
 
 const ja: AppMessages = {
@@ -103,6 +104,7 @@ const ja: AppMessages = {
     reactionPlaceholder: '例：発疹、おなかの張り（任意）',
     endBeforeStart: '終了時刻は開始時刻より後にしてください。',
     pickTime: '有効な時刻を選んでください。',
+    futureTime: '未来の時刻になっています。日付と午前／午後を確認してください。',
     amountRange: '量は 0〜2000 ml（67 oz）の範囲で入力してください。',
     save: '記録を保存',
     deleteEntry: '記録を削除'
@@ -181,7 +183,7 @@ const ja: AppMessages = {
     standard: (sex: string) => `WHO ${sex}基準`,
     boys: '男の子',
     girls: '女の子',
-    percentile: (p: string) => `${p} パーセンタイル`,
+    percentile: percentileLabel['ja'],
     legendBaby: '赤ちゃんの記録',
     chartNote: (sex: string) => `線は WHO の${sex}の成長基準（3・15・50・85・97 パーセンタイル）です。グラフは赤ちゃんの月齢に合わせて拡大されます。`,
     history: '測定記録',

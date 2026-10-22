@@ -1,3 +1,4 @@
+import { percentileLabel } from '../percentile';
 const en = {
   nav: { today: 'Today', history: 'History', trends: 'Trends', health: 'Growth', development: 'Skills', settings: 'Settings' },
   common: {
@@ -101,6 +102,7 @@ const en = {
     reactionPlaceholder: 'e.g. rash, gas (optional)',
     endBeforeStart: 'The end time must be after the start time.',
     pickTime: 'Please choose a valid time.',
+    futureTime: 'That time is in the future. Please check the date and AM/PM.',
     amountRange: 'Amounts must be between 0 and 2000 ml (67 oz).',
     save: 'Save entry',
     deleteEntry: 'Delete entry'
@@ -179,7 +181,7 @@ const en = {
     standard: (sex: string) => `WHO ${sex} standard`,
     boys: 'boys',
     girls: 'girls',
-    percentile: (p: string) => `${p}th percentile`,
+    percentile: percentileLabel['en'],
     legendBaby: 'Your baby',
     chartNote: (sex: string) => `Lines show the WHO Child Growth Standards for ${sex}: 3rd, 15th, 50th, 85th and 97th percentiles. The chart zooms to your baby’s age.`,
     history: 'Measurements',
@@ -265,7 +267,7 @@ const en = {
     download: 'Download backup',
     restore: 'Restore or merge a backup',
     restoreHint: 'Importing merges records and skips ones you already have.',
-    importDone: (logs: number, growth: number) => `Imported ${logs} entries and ${growth} measurements`,
+    importDone: (logs: number, growth: number) => `Imported ${logs} ${logs === 1 ? 'entry' : 'entries'} and ${growth} ${growth === 1 ? 'measurement' : 'measurements'}`,
     importNothing: 'Nothing new to import — all records already exist.',
     importInvalid: 'This file is not a valid NurtureTrack backup.',
     csv: 'Export entries as CSV',

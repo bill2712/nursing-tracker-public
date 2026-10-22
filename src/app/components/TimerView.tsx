@@ -4,7 +4,7 @@ import { showToast, vibrate } from './Toast';
 import { useFormat, useI18n, useVolume } from '../i18n';
 import { actions } from '../store';
 import type { ActiveTimer, BabyProfile, LogEntry } from '../types';
-import { formatTimer, generateId, getFinishedTimerTimes, getTimerElapsedSeconds, toLocalInput } from '../utils';
+import { formatTimer, generateId, getFinishedTimerTimes, getTimerElapsedSeconds, resolveSnooze, toLocalInput } from '../utils';
 import { TYPE_META, TypeIcon } from '../typeMeta';
 import { PencilIcon } from './Icons';
 
@@ -33,12 +33,8 @@ export const TimerView: React.FC<{ timer: ActiveTimer; profile: BabyProfile }> =
   // Resume automatically when a snooze ends, even if the screen stayed open.
   useEffect(() => {
     if (!timer.snoozeEndTime || !timer.pauseStartTime) return;
-    const resume = () => actions.updateTimer(t => {
-      if (!t.pauseStartTime || !t.snoozeEndTime) return t;
-      const resumeAt = Math.max(Date.now(), t.snoozeEndTime);
-      const { pauseStartTime, snoozeEndTime, ...running } = t;
-      return { ...running, ignoredDurationMs: (t.ignoredDurationMs || 0) + (resumeAt - pauseStartTime) };
-    });
+    // Resume at the snooze end time: the timer may fire late when the phone is locked.
+    const resume = () => actions.updateTimer(t => resolveSnooze(t, Math.max(Date.now(), t.snoozeEndTime || 0)));
     const remaining = timer.snoozeEndTime - Date.now();
     if (remaining <= 0) { resume(); return; }
     const id = window.setTimeout(resume, remaining);
@@ -188,7 +184,10 @@ export const TimerView: React.FC<{ timer: ActiveTimer; profile: BabyProfile }> =
         <Modal title={m.timer.editStart} onClose={() => setEditingStart(false)} closeLabel={m.common.close}
           footer={<button type="button" className="nt-btn nt-btn-dark w-full" onClick={() => {
             const ts = new Date(startInput).getTime();
-            if (Number.isFinite(ts) && ts <= Date.now()) actions.updateTimer(t => ({ ...t, startTime: ts }));
+            if (!Number.isFinite(ts)) return showToast({ message: m.form.pickTime, tone: 'error' });
+            // The start must be before now, and before the pause if the timer is paused.
+            if (ts > (timer.pauseStartTime ?? Date.now())) return showToast({ message: m.form.futureTime, tone: 'error' });
+            actions.updateTimer(t => ({ ...t, startTime: ts }));
             setEditingStart(false);
           }}>{m.timer.updateTime}</button>}>
           <label className="block">

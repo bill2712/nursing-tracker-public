@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { addDays } from 'date-fns';
 import { LogForm } from './LogForm';
 import { showToast, vibrate } from './Toast';
 import { useFormat, useI18n, useVolume } from '../i18n';
@@ -38,7 +39,7 @@ export const History: React.FC<{ data: AppData }> = ({ data }) => {
     return data.logs.filter(log =>
       (filter === 'all' || log.type === filter) &&
       (fromTs === null || log.startTime >= fromTs) &&
-      (toTs === null || log.startTime < toTs + 86400000)
+      (toTs === null || log.startTime < addDays(toTs, 1).getTime())
     );
   }, [data.logs, filter, from, to]);
 

@@ -1,3 +1,4 @@
+import { percentileLabel } from '../percentile';
 import type { AppMessages } from './en';
 
 const zhHans: AppMessages = {
@@ -103,6 +104,7 @@ const zhHans: AppMessages = {
     reactionPlaceholder: '例如：红疹、胀气（选填）',
     endBeforeStart: '结束时间必须晚于开始时间。',
     pickTime: '请选择有效的时间。',
+    futureTime: '这个时间在未来，请检查日期和上午／下午。',
     amountRange: '份量必须在 0 到 2000 毫升（67 盎司）之间。',
     save: '保存记录',
     deleteEntry: '删除记录'
@@ -181,7 +183,7 @@ const zhHans: AppMessages = {
     standard: (sex: string) => `WHO ${sex}标准`,
     boys: '男孩',
     girls: '女孩',
-    percentile: (p: string) => `第 ${p} 百分位`,
+    percentile: percentileLabel['zh-hans'],
     legendBaby: '宝宝记录',
     chartNote: (sex: string) => `曲线为 WHO ${sex}儿童生长标准：第 3、15、50、85 和 97 百分位。图表会按宝宝月龄自动放大。`,
     history: '测量记录',

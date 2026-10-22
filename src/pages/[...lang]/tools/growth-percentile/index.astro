@@ -14,7 +14,7 @@ const all = await getGuides(locale);
 const guides = ['who-growth-charts-explained', 'how-much-milk-does-a-newborn-need'].map(s => all.find(x => x.slug === s)).filter(Boolean) as Guide[];
 const labels = {
   sex: g.sex, boy: g.boy, girl: g.girl, birthDate: g.birthDate, measureDate: g.measureDate, weight: g.weight, length: g.length,
-  head: g.head, optional: g.optional, result: g.result, ageTemplate: g.ageResult('{months}'), percentileTemplate: g.percentileText('{p}'),
+  head: g.head, optional: g.optional, result: g.result, ageTemplate: g.ageResult('{months}'),
   explainTitle: g.explainTitle, explainTemplate: g.explain('{p}'), outOfRange: g.outOfRange, ageOutOfRange: g.ageOutOfRange
 };
 const jsonLd = [{
@@ -35,7 +35,7 @@ const jsonLd = [{
   breadcrumbs={[{ name: ui.nav.tools, page: '/tools/' }, { name: g.title, page: '/tools/growth-percentile/' }]}>
   <ToolShell locale={locale} title={g.title} lead={g.lead} guides={guides}>
     <div slot="tool">
-      <GrowthCalculator client:only="react" labels={labels} defaultUnit={locale === 'en' ? 'imperial' : 'metric'} />
+      <GrowthCalculator client:only="react" locale={locale} labels={labels} defaultUnit={locale === 'en' ? 'imperial' : 'metric'} />
       <noscript><p class="card p-5">{ui.appPage.noscript}</p></noscript>
     </div>
     <section>

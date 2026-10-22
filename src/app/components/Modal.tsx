@@ -15,10 +15,32 @@ export const Modal: React.FC<ModalProps> = ({ title, onClose, children, footer, 
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
 
+  // Callers pass a new onClose on every render; keep the latest in a ref so the
+  // effect below runs once and does not pull focus away while someone types.
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
     panelRef.current?.focus();
-    const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') onClose(); };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onCloseRef.current();
+      // Keep Tab inside the dialog.
+      if (event.key === 'Tab' && panelRef.current) {
+        const focusable = [...panelRef.current.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')]
+          .filter(el => !el.hasAttribute('disabled') && el.offsetParent !== null);
+        if (!focusable.length) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && (document.activeElement === first || document.activeElement === panelRef.current)) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+    };
     document.addEventListener('keydown', onKey);
     const overflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -27,7 +49,7 @@ export const Modal: React.FC<ModalProps> = ({ title, onClose, children, footer, 
       document.body.style.overflow = overflow;
       previous?.focus?.();
     };
-  }, [onClose]);
+  }, []);
 
   return createPortal(
     <div className="nt-modal-backdrop" onClick={onClose}>

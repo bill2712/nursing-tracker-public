@@ -1,3 +1,4 @@
+import { percentileLabel } from '../percentile';
 import type { AppMessages } from './en';
 
 const zhHant: AppMessages = {
@@ -103,6 +104,7 @@ const zhHant: AppMessages = {
     reactionPlaceholder: '例如：紅疹、脹氣（選填）',
     endBeforeStart: '結束時間必須遲於開始時間。',
     pickTime: '請選擇有效的時間。',
+    futureTime: '這個時間在未來，請檢查日期和上午／下午。',
     amountRange: '份量必須介乎 0 至 2000 毫升（67 安士）。',
     save: '儲存紀錄',
     deleteEntry: '刪除紀錄'
@@ -181,7 +183,7 @@ const zhHant: AppMessages = {
     standard: (sex: string) => `WHO ${sex}標準`,
     boys: '男孩',
     girls: '女孩',
-    percentile: (p: string) => `第 ${p} 百分位`,
+    percentile: percentileLabel['zh-hant'],
     legendBaby: '寶寶紀錄',
     chartNote: (sex: string) => `曲線為 WHO ${sex}兒童生長標準：第 3、15、50、85 及 97 百分位。圖表會按寶寶年齡自動放大。`,
     history: '量度紀錄',

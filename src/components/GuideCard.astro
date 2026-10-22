@@ -1,0 +1,18 @@
+---
+import { localePath, type Locale } from '../i18n/locales';
+import { useUi } from '../i18n/ui';
+import { readingMinutes, type Guide } from '../lib/guides';
+
+interface Props { guide: Guide; locale: Locale }
+const { guide, locale } = Astro.props;
+const ui = useUi(locale);
+---
+<a href={localePath(locale, `/guides/${guide.slug}/`)} class="card group flex h-full flex-col p-5 text-[var(--nt-text)] no-underline transition-transform hover:-translate-y-0.5">
+  <span class="flex items-center gap-2">
+    <span class="grid h-10 w-10 place-items-center rounded-xl bg-pink-50 text-xl dark:bg-pink-950/40" aria-hidden="true">{guide.data.emoji}</span>
+    <span class="text-xs font-black uppercase tracking-wider text-pink-700 dark:text-pink-300">{ui.guides.categories[guide.data.category]}</span>
+  </span>
+  <span class="mt-4 block text-lg font-black leading-snug group-hover:text-pink-700 dark:group-hover:text-pink-300">{guide.data.title}</span>
+  <span class="muted mt-2 block flex-1 text-sm leading-relaxed">{guide.data.description}</span>
+  <span class="muted mt-4 block text-xs font-bold">{ui.guides.minutesRead(readingMinutes(guide.body ?? '', locale))}</span>
+</a>

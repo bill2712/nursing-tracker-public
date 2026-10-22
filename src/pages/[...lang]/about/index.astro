@@ -1,0 +1,36 @@
+---
+import Base from '../../../layouts/Base.astro';
+import SupportBanner from '../../../components/SupportBanner.astro';
+import { localeStaticPaths, localePath, absoluteUrl, BRAND, REPO_URL, type Locale } from '../../../i18n/locales';
+import { useUi } from '../../../i18n/ui';
+
+export const getStaticPaths = localeStaticPaths;
+const { locale } = Astro.props as { locale: Locale };
+const ui = useUi(locale);
+const a = ui.about;
+const jsonLd = [{
+  '@context': 'https://schema.org',
+  '@type': 'AboutPage',
+  name: a.title,
+  url: absoluteUrl(localePath(locale, '/about/')),
+  about: { '@type': 'Organization', name: BRAND, url: absoluteUrl(localePath(locale, '/')), sameAs: [REPO_URL] }
+}];
+---
+<Base locale={locale} title={a.metaTitle} description={a.metaDescription} page="/about/" jsonLd={jsonLd} breadcrumbs={[{ name: ui.nav.about, page: '/about/' }]}>
+  <div class="container-page max-w-3xl py-12">
+    <p class="eyebrow">{ui.nav.about}</p>
+    <h1 class="section-title mt-3 !text-[clamp(2rem,4.5vw,2.75rem)]">{a.title}</h1>
+    <div class="mt-8 space-y-5 text-lg leading-relaxed">
+      {a.paragraphs.map(p => <p>{p}</p>)}
+    </div>
+    <h2 class="mt-12 text-2xl font-black">{a.principlesTitle}</h2>
+    <ul class="mt-5 grid gap-3 sm:grid-cols-2">
+      {a.principles.map(p => <li class="card flex items-center gap-3 p-4 font-bold"><span class="text-emerald-500" aria-hidden="true">✓</span>{p}</li>)}
+    </ul>
+    <div class="mt-10 flex flex-wrap gap-3">
+      <a class="btn-primary" href={localePath(locale, '/app/')}>{ui.openApp} →</a>
+      <a class="btn-secondary" href={REPO_URL} target="_blank" rel="noopener">GitHub</a>
+    </div>
+    <SupportBanner locale={locale} class="mt-12" />
+  </div>
+</Base>

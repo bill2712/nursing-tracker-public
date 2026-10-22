@@ -1,0 +1,182 @@
+---
+import Base from '../../layouts/Base.astro';
+import PhoneMockup from '../../components/PhoneMockup.astro';
+import SupportBanner from '../../components/SupportBanner.astro';
+import GuideCard from '../../components/GuideCard.astro';
+import { localeStaticPaths, localePath, absoluteUrl, BRAND, LOCALE_META, type Locale } from '../../i18n/locales';
+import { useUi } from '../../i18n/ui';
+import { getGuides } from '../../lib/guides';
+import { toolList } from '../../lib/tools';
+
+export const getStaticPaths = localeStaticPaths;
+const { locale } = Astro.props as { locale: Locale };
+const ui = useUi(locale);
+const h = ui.home;
+const guides = (await getGuides(locale)).slice(0, 6);
+const faqItems = ui.faq.items.slice(0, 6);
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: BRAND,
+    url: absoluteUrl(localePath(locale, '/')),
+    inLanguage: LOCALE_META[locale].htmlLang,
+    description: h.metaDescription
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: BRAND,
+    url: absoluteUrl(localePath(locale, '/app/')),
+    applicationCategory: 'HealthApplication',
+    operatingSystem: 'Any (web browser)',
+    browserRequirements: 'Requires JavaScript',
+    isAccessibleForFree: true,
+    inLanguage: ['en', 'zh-Hant', 'zh-Hans', 'ja'],
+    description: h.metaDescription,
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+    featureList: h.features.map(feature => feature.title)
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqItems.map(item => ({
+      '@type': 'Question',
+      name: item.q,
+      acceptedAnswer: { '@type': 'Answer', text: item.a }
+    }))
+  }
+];
+---
+<Base locale={locale} title={h.metaTitle} description={h.metaDescription} page="/" jsonLd={jsonLd}>
+  <section class="hero-bg">
+    <div class="container-page grid items-center gap-12 py-12 md:py-20 lg:grid-cols-[1.15fr_1fr]">
+      <div>
+        <p class="eyebrow">{h.eyebrow}</p>
+        <h1 class="mt-4 text-[clamp(2rem,5.2vw,3.4rem)] font-black leading-[1.08] tracking-tight">{h.h1}</h1>
+        <p class="muted mt-5 max-w-xl text-lg leading-relaxed">{h.lead}</p>
+        <div class="mt-8 flex flex-wrap gap-3">
+          <a href={localePath(locale, '/app/')} class="btn-primary text-base">{h.ctaPrimary} <span aria-hidden="true">→</span></a>
+          <a href={localePath(locale, '/guides/')} class="btn-secondary text-base">{h.ctaSecondary}</a>
+        </div>
+        <ul class="mt-8 flex flex-wrap gap-2" aria-label={h.eyebrow}>
+          {h.trust.map(item => <li class="chip"><span aria-hidden="true" class="text-emerald-500">✓</span>{item}</li>)}
+        </ul>
+      </div>
+      <PhoneMockup locale={locale} alt={h.previewAlt} />
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="features-title">
+    <div class="container-page">
+      <div class="max-w-2xl">
+        <h2 id="features-title" class="section-title">{h.featuresTitle}</h2>
+        <p class="muted mt-3 text-lg">{h.featuresLead}</p>
+      </div>
+      <ul class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {h.features.map(feature => (
+          <li class="card flex gap-4 p-4 sm:block sm:p-5">
+            <span class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-pink-50 text-2xl dark:bg-pink-950/40" aria-hidden="true">{feature.icon}</span>
+            <div>
+              <h3 class="font-black sm:mt-4">{feature.title}</h3>
+              <p class="muted mt-1.5 text-sm leading-relaxed sm:mt-2">{feature.text}</p>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section bg-[var(--nt-surface)]" aria-labelledby="privacy-title">
+    <div class="container-page grid gap-10 lg:grid-cols-2 lg:items-center">
+      <div>
+        <p class="eyebrow">🔒</p>
+        <h2 id="privacy-title" class="section-title mt-2">{h.privacyTitle}</h2>
+        <p class="muted mt-3 text-lg">{h.privacyLead}</p>
+        <a href={localePath(locale, '/privacy/')} class="mt-6 inline-flex font-bold text-pink-700 hover:underline dark:text-pink-300">{ui.nav.privacy} →</a>
+      </div>
+      <ul class="space-y-3">
+        {h.privacyPoints.map(point => (
+          <li class="card flex gap-3 p-4">
+            <span class="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-emerald-500 text-xs font-black text-white" aria-hidden="true">✓</span>
+            <span class="leading-relaxed">{point}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="steps-title">
+    <div class="container-page">
+      <h2 id="steps-title" class="section-title text-center">{h.stepsTitle}</h2>
+      <ol class="mx-auto mt-10 grid max-w-5xl gap-4 md:grid-cols-3">
+        {h.steps.map((step, index) => (
+          <li class="card p-6">
+            <span class="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-pink-500 to-indigo-500 font-black text-white" aria-hidden="true">{index + 1}</span>
+            <h3 class="mt-4 text-lg font-black">{step.title}</h3>
+            <p class="muted mt-2 leading-relaxed">{step.text}</p>
+          </li>
+        ))}
+      </ol>
+      <div class="mt-10 text-center">
+        <a href={localePath(locale, '/app/')} class="btn-primary text-base">{h.ctaPrimary} <span aria-hidden="true">→</span></a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section bg-[var(--nt-surface)]" aria-labelledby="guides-title">
+    <div class="container-page">
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <div class="max-w-2xl">
+          <h2 id="guides-title" class="section-title">{h.guidesTitle}</h2>
+          <p class="muted mt-3 text-lg">{h.guidesLead}</p>
+        </div>
+        <a href={localePath(locale, '/guides/')} class="btn-secondary">{h.allGuides} →</a>
+      </div>
+      <div class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {guides.map(guide => <GuideCard guide={guide} locale={locale} />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="tools-title">
+    <div class="container-page">
+      <h2 id="tools-title" class="section-title">{h.toolsTitle}</h2>
+      <p class="muted mt-3 text-lg">{h.toolsLead}</p>
+      <div class="mt-8 grid gap-4 md:grid-cols-2">
+        {toolList(locale).map(tool => (
+          <a href={localePath(locale, tool.page)} class="card group flex gap-4 p-5 text-[var(--nt-text)] no-underline transition-transform hover:-translate-y-0.5">
+            <span class="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-indigo-50 text-2xl dark:bg-indigo-950/40" aria-hidden="true">{tool.emoji}</span>
+            <span>
+              <span class="block text-lg font-black group-hover:text-pink-700 dark:group-hover:text-pink-300">{tool.title}</span>
+              <span class="muted mt-1 block text-sm">{tool.text}</span>
+            </span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section bg-[var(--nt-surface)]" aria-labelledby="faq-title">
+    <div class="container-page max-w-3xl">
+      <h2 id="faq-title" class="section-title">{h.faqTitle}</h2>
+      <div class="mt-8 space-y-3">
+        {faqItems.map(item => (
+          <details class="card group p-5">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-4 font-black">
+              {item.q}
+              <span class="text-pink-600 transition-transform group-open:rotate-45" aria-hidden="true">＋</span>
+            </summary>
+            <p class="muted mt-3 leading-relaxed">{item.a}</p>
+          </details>
+        ))}
+      </div>
+      <a href={localePath(locale, '/faq/')} class="mt-6 inline-flex font-bold text-pink-700 hover:underline dark:text-pink-300">{h.allFaq} →</a>
+    </div>
+  </section>
+
+  <div class="container-page mt-16">
+    <SupportBanner locale={locale} />
+  </div>
+</Base>

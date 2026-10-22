@@ -1,0 +1,42 @@
+---
+import { localePath, type Locale } from '../i18n/locales';
+import { useUi } from '../i18n/ui';
+import SupportBanner from './SupportBanner.astro';
+import GuideCard from './GuideCard.astro';
+import type { Guide } from '../lib/guides';
+
+interface Props { locale: Locale; title: string; lead: string; guides: Guide[] }
+const { locale, title, lead, guides } = Astro.props;
+const ui = useUi(locale);
+---
+<div class="container-page max-w-4xl py-8 md:py-12">
+  <nav aria-label="Breadcrumb" class="muted text-sm">
+    <ol class="flex flex-wrap items-center gap-1.5">
+      <li><a class="hover:text-pink-600" href={localePath(locale, '/')}>{ui.breadcrumbHome}</a></li>
+      <li aria-hidden="true">/</li>
+      <li><a class="hover:text-pink-600" href={localePath(locale, '/tools/')}>{ui.nav.tools}</a></li>
+    </ol>
+  </nav>
+  <h1 class="mt-6 text-[clamp(1.9rem,4.5vw,2.6rem)] font-black leading-tight tracking-tight">{title}</h1>
+  <p class="muted mt-3 text-lg">{lead}</p>
+  <div class="mt-8"><slot name="tool" /></div>
+  <div class="mt-10 space-y-8 leading-relaxed"><slot /></div>
+  <div class="notice mt-10 p-5 text-sm leading-relaxed">
+    <p class="font-black">{ui.guides.disclaimerTitle}</p>
+    <p class="mt-1">{ui.guides.disclaimer}</p>
+  </div>
+  <section class="card mt-8 flex flex-col gap-4 p-6 sm:flex-row sm:items-center">
+    <div class="flex-1">
+      <p class="text-lg font-black">{ui.guides.trackCta}</p>
+      <p class="muted mt-1 text-sm">{ui.guides.trackCtaText}</p>
+    </div>
+    <a class="btn-primary" href={localePath(locale, '/app/')}>{ui.openApp} →</a>
+  </section>
+  {guides.length > 0 && (
+    <section class="mt-12">
+      <h2 class="text-2xl font-black">{ui.guides.related}</h2>
+      <div class="mt-5 grid gap-4 sm:grid-cols-2">{guides.map(guide => <GuideCard guide={guide} locale={locale} />)}</div>
+    </section>
+  )}
+  <SupportBanner locale={locale} class="mt-12" />
+</div>

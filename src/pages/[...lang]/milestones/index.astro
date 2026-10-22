@@ -1,0 +1,52 @@
+---
+import Base from '../../../layouts/Base.astro';
+import SupportBanner from '../../../components/SupportBanner.astro';
+import { localeStaticPaths, localePath, absoluteUrl, type Locale } from '../../../i18n/locales';
+import { useUi } from '../../../i18n/ui';
+import { loadDevelopment } from '../../../data/development';
+import { monthSlug } from '../../../lib/milestones';
+
+export const getStaticPaths = localeStaticPaths;
+const { locale } = Astro.props as { locale: Locale };
+const ui = useUi(locale);
+const ms = ui.milestones;
+const months = await loadDevelopment(locale);
+const emoji: Record<number, string> = { 0: '👶', 1: '🍼', 2: '😊', 3: '👐', 4: '🔄', 6: '🥣', 9: '🐾', 12: '🎂', 18: '🏃', 24: '🗣️' };
+
+const jsonLd = [{
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: ms.title,
+  description: ms.metaDescription,
+  url: absoluteUrl(localePath(locale, '/milestones/')),
+  hasPart: months.map(month => ({ '@type': 'Article', headline: ms.monthTitle(month.month), url: absoluteUrl(localePath(locale, `/milestones/${monthSlug(month.month)}/`)) }))
+}];
+---
+<Base locale={locale} title={ms.metaTitle} description={ms.metaDescription} page="/milestones/" jsonLd={jsonLd} breadcrumbs={[{ name: ui.nav.milestones, page: '/milestones/' }]}>
+  <section class="hero-bg">
+    <div class="container-page py-12">
+      <p class="eyebrow">{ms.eyebrow}</p>
+      <h1 class="section-title mt-3 !text-[clamp(2rem,4.5vw,2.75rem)]">{ms.title}</h1>
+      <p class="muted mt-4 max-w-2xl text-lg">{ms.lead}</p>
+    </div>
+  </section>
+  <div class="container-page py-10">
+    <ol class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {months.map(month => (
+        <li>
+          <a href={localePath(locale, `/milestones/${monthSlug(month.month)}/`)} class="card group flex h-full flex-col p-5 text-[var(--nt-text)] no-underline transition-transform hover:-translate-y-0.5">
+            <span class="flex items-center gap-3">
+              <span class="grid h-11 w-11 place-items-center rounded-2xl bg-indigo-50 text-2xl dark:bg-indigo-950/40" aria-hidden="true">{emoji[month.month]}</span>
+              <span class="text-xs font-black uppercase tracking-wider text-indigo-700 dark:text-indigo-300">{ms.monthShort(month.month)}</span>
+            </span>
+            <span class="mt-4 block text-lg font-black leading-snug group-hover:text-pink-700 dark:group-hover:text-pink-300">{ms.monthTitle(month.month)}</span>
+            <span class="muted mt-2 block flex-1 text-sm leading-relaxed">{month.summary}</span>
+            <span class="muted mt-4 block text-xs font-bold">{month.abilities.length + month.exercises.length + month.care.length} {ms.items}</span>
+          </a>
+        </li>
+      ))}
+    </ol>
+    <p class="notice mt-10 p-5 text-sm leading-relaxed">{ms.rangeNote}</p>
+    <SupportBanner locale={locale} class="mt-10" />
+  </div>
+</Base>

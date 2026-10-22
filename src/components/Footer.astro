@@ -1,0 +1,55 @@
+---
+import { LOCALES, LOCALE_META, SUPPORT_URL, REPO_URL, localePath, type Locale } from '../i18n/locales';
+import { useUi } from '../i18n/ui';
+import Logo from './Logo.astro';
+
+interface Props { locale: Locale; page: string }
+const { locale, page } = Astro.props;
+const ui = useUi(locale);
+const year = new Date().getFullYear();
+---
+<footer class="mt-16 border-t border-[var(--nt-line)] bg-[var(--nt-surface)]">
+  <div class="container-page grid gap-10 py-12 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+    <div class="space-y-4">
+      <a href={localePath(locale, '/')} class="inline-flex items-center gap-2 text-[var(--nt-text)] no-underline">
+        <Logo class="h-9 w-9" />
+        <span class="text-lg font-black">{ui.siteName}</span>
+      </a>
+      <p class="muted text-sm leading-relaxed">{ui.footer.about}</p>
+      <a href={SUPPORT_URL} target="_blank" rel="noopener" class="btn-kofi text-sm" data-support-link><span aria-hidden="true">♥</span>{ui.support.button}</a>
+    </div>
+    <nav aria-label={ui.footer.explore}>
+      <p class="mb-3 text-sm font-black">{ui.footer.explore}</p>
+      <ul class="space-y-2 text-sm">
+        <li><a class="muted hover:text-pink-600" href={localePath(locale, '/app/')}>{ui.nav.app}</a></li>
+        <li><a class="muted hover:text-pink-600" href={localePath(locale, '/guides/')}>{ui.nav.guides}</a></li>
+        <li><a class="muted hover:text-pink-600" href={localePath(locale, '/milestones/')}>{ui.nav.milestones}</a></li>
+        <li><a class="muted hover:text-pink-600" href={localePath(locale, '/tools/')}>{ui.nav.tools}</a></li>
+        <li><a class="muted hover:text-pink-600" href={localePath(locale, '/faq/')}>{ui.nav.faq}</a></li>
+      </ul>
+    </nav>
+    <nav aria-label={ui.footer.project}>
+      <p class="mb-3 text-sm font-black">{ui.footer.project}</p>
+      <ul class="space-y-2 text-sm">
+        <li><a class="muted hover:text-pink-600" href={localePath(locale, '/about/')}>{ui.nav.about}</a></li>
+        <li><a class="muted hover:text-pink-600" href={localePath(locale, '/support/')}>{ui.nav.support}</a></li>
+        <li><a class="muted hover:text-pink-600" href={localePath(locale, '/privacy/')}>{ui.nav.privacy}</a></li>
+        <li><a class="muted hover:text-pink-600" href={REPO_URL} target="_blank" rel="noopener">{ui.footer.sourceCode}</a></li>
+      </ul>
+    </nav>
+    <nav aria-label={ui.language}>
+      <p class="mb-3 text-sm font-black">{ui.language}</p>
+      <ul class="space-y-2 text-sm">
+        {LOCALES.map(alt => (
+          <li><a class="muted hover:text-pink-600" href={localePath(alt, page)} hreflang={LOCALE_META[alt].hreflang} lang={LOCALE_META[alt].htmlLang} data-set-locale={alt}>{LOCALE_META[alt].label}</a></li>
+        ))}
+      </ul>
+    </nav>
+  </div>
+  <div class="border-t border-[var(--nt-line)]">
+    <div class="container-page space-y-3 py-6 text-xs leading-relaxed">
+      <p class="muted">{ui.footer.disclaimer}</p>
+      <p class="muted">© {year} {ui.siteName} · {ui.footer.madeBy}</p>
+    </div>
+  </div>
+</footer>

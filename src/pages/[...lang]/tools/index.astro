@@ -1,0 +1,34 @@
+---
+import Base from '../../../layouts/Base.astro';
+import SupportBanner from '../../../components/SupportBanner.astro';
+import { localeStaticPaths, localePath, type Locale } from '../../../i18n/locales';
+import { useUi } from '../../../i18n/ui';
+import { toolList } from '../../../lib/tools';
+
+export const getStaticPaths = localeStaticPaths;
+const { locale } = Astro.props as { locale: Locale };
+const ui = useUi(locale);
+const t = ui.tools;
+---
+<Base locale={locale} title={t.metaTitle} description={t.metaDescription} page="/tools/" breadcrumbs={[{ name: ui.nav.tools, page: '/tools/' }]}>
+  <section class="hero-bg">
+    <div class="container-page py-12">
+      <p class="eyebrow">{t.eyebrow}</p>
+      <h1 class="section-title mt-3 !text-[clamp(2rem,4.5vw,2.75rem)]">{t.title}</h1>
+      <p class="muted mt-4 max-w-2xl text-lg">{t.lead}</p>
+    </div>
+  </section>
+  <div class="container-page py-10">
+    <div class="grid gap-4 md:grid-cols-2">
+      {toolList(locale).map(tool => (
+        <a href={localePath(locale, tool.page)} class="card group flex flex-col gap-3 p-6 text-[var(--nt-text)] no-underline transition-transform hover:-translate-y-0.5">
+          <span class="grid h-12 w-12 place-items-center rounded-2xl bg-indigo-50 text-2xl dark:bg-indigo-950/40" aria-hidden="true">{tool.emoji}</span>
+          <span class="text-xl font-black group-hover:text-pink-700 dark:group-hover:text-pink-300">{tool.title}</span>
+          <span class="muted">{tool.text}</span>
+          <span class="mt-auto font-bold text-pink-700 dark:text-pink-300">{t.open} →</span>
+        </a>
+      ))}
+    </div>
+    <SupportBanner locale={locale} class="mt-12" />
+  </div>
+</Base>

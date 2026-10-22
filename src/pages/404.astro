@@ -1,0 +1,19 @@
+---
+import Base from '../layouts/Base.astro';
+import { LOCALES, LOCALE_META, localePath } from '../i18n/locales';
+import { useUi } from '../i18n/ui';
+
+const ui = useUi('en');
+---
+<Base locale="en" title={ui.notFound.metaTitle} description={ui.notFound.text} page="/404/" noindex>
+  <div class="container-page max-w-2xl py-20 text-center">
+    <p class="text-6xl" aria-hidden="true">🍼</p>
+    <h1 class="section-title mt-6">{ui.notFound.title}</h1>
+    <p class="muted mt-3 text-lg">{ui.notFound.text}</p>
+    <ul class="mt-8 flex flex-wrap justify-center gap-3">
+      {LOCALES.map(locale => (
+        <li><a class="btn-secondary" href={localePath(locale, '/')} lang={LOCALE_META[locale].htmlLang}>{useUi(locale).notFound.back} · {LOCALE_META[locale].label}</a></li>
+      ))}
+    </ul>
+  </div>
+</Base>

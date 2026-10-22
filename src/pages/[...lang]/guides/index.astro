@@ -1,0 +1,54 @@
+---
+import Base from '../../../layouts/Base.astro';
+import GuideCard from '../../../components/GuideCard.astro';
+import SupportBanner from '../../../components/SupportBanner.astro';
+import { localeStaticPaths, localePath, absoluteUrl, type Locale } from '../../../i18n/locales';
+import { useUi } from '../../../i18n/ui';
+import { getGuides } from '../../../lib/guides';
+
+export const getStaticPaths = localeStaticPaths;
+const { locale } = Astro.props as { locale: Locale };
+const ui = useUi(locale);
+const g = ui.guides;
+const guides = await getGuides(locale);
+const categories = ['feeding', 'sleep', 'care', 'health', 'growth', 'development'].filter(cat => guides.some(guide => guide.data.category === cat));
+
+const jsonLd = [{
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: g.title,
+  description: g.metaDescription,
+  url: absoluteUrl(localePath(locale, '/guides/')),
+  hasPart: guides.map(guide => ({ '@type': 'Article', headline: guide.data.title, url: absoluteUrl(localePath(locale, `/guides/${guide.slug}/`)) }))
+}];
+---
+<Base locale={locale} title={g.metaTitle} description={g.metaDescription} page="/guides/" jsonLd={jsonLd} breadcrumbs={[{ name: ui.nav.guides, page: '/guides/' }]}>
+  <section class="hero-bg">
+    <div class="container-page py-12">
+      <p class="eyebrow">{g.eyebrow}</p>
+      <h1 class="section-title mt-3 !text-[clamp(2rem,4.5vw,2.75rem)]">{g.title}</h1>
+      <p class="muted mt-4 max-w-2xl text-lg">{g.lead}</p>
+      <nav class="mt-6 flex flex-wrap gap-2" aria-label={g.eyebrow}>
+        {categories.map(cat => <a class="chip no-underline hover:border-pink-300" href={`#${cat}`}>{g.categories[cat]}</a>)}
+      </nav>
+    </div>
+  </section>
+  <div class="container-page space-y-12 py-10">
+    {categories.map(cat => (
+      <section id={cat} aria-labelledby={`h-${cat}`}>
+        <h2 id={`h-${cat}`} class="text-2xl font-black">{g.categories[cat]}</h2>
+        <div class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {guides.filter(guide => guide.data.category === cat).map(guide => <GuideCard guide={guide} locale={locale} />)}
+        </div>
+      </section>
+    ))}
+    <section class="card flex flex-col items-start gap-3 p-6 sm:flex-row sm:items-center">
+      <div class="flex-1">
+        <h2 class="text-lg font-black">{ui.milestones.title}</h2>
+        <p class="muted mt-1">{ui.milestones.lead}</p>
+      </div>
+      <a class="btn-secondary" href={localePath(locale, '/milestones/')}>{ui.nav.milestones} →</a>
+    </section>
+    <SupportBanner locale={locale} />
+  </div>
+</Base>

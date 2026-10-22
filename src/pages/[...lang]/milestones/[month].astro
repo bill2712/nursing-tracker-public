@@ -1,0 +1,127 @@
+---
+import Base from '../../../layouts/Base.astro';
+import SupportBanner from '../../../components/SupportBanner.astro';
+import GuideCard from '../../../components/GuideCard.astro';
+import { LOCALES, LOCALE_META, BRAND, langParam, localePath, absoluteUrl, assetPath, type Locale } from '../../../i18n/locales';
+import { useUi } from '../../../i18n/ui';
+import { loadDevelopment, type DevMonth } from '../../../data/development';
+import { monthSlug } from '../../../lib/milestones';
+import { getGuides, type Guide } from '../../../lib/guides';
+
+export async function getStaticPaths() {
+  const paths = [];
+  for (const locale of LOCALES) {
+    const months = await loadDevelopment(locale);
+    months.forEach((month, index) => paths.push({
+      params: { lang: langParam(locale), month: monthSlug(month.month) },
+      props: { locale, month, prev: months[index - 1] ?? null, next: months[index + 1] ?? null }
+    }));
+  }
+  return paths;
+}
+
+const { locale, month, prev, next } = Astro.props as { locale: Locale; month: DevMonth; prev: DevMonth | null; next: DevMonth | null };
+const ui = useUi(locale);
+const ms = ui.milestones;
+const title = ms.monthTitle(month.month);
+const page = `/milestones/${monthSlug(month.month)}/`;
+
+// Pick the guides most relevant to this age.
+const guideSlugs = month.month <= 2
+  ? ['how-much-milk-does-a-newborn-need', 'how-many-wet-diapers', 'tummy-time']
+  : month.month <= 4 ? ['tummy-time', 'baby-sleep-by-age', 'colic-and-crying']
+  : month.month <= 9 ? ['starting-solid-foods', 'baby-oral-care-and-teething', 'baby-sleep-by-age']
+  : ['starting-solid-foods', 'baby-oral-care-and-teething', 'who-growth-charts-explained'];
+const allGuides = await getGuides(locale);
+const guides = guideSlugs.map(slug => allGuides.find(g => g.slug === slug)).filter(Boolean) as Guide[];
+
+const jsonLd = [{
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: title,
+  description: ms.monthMetaDescription(month.month),
+  inLanguage: LOCALE_META[locale].htmlLang,
+  mainEntityOfPage: absoluteUrl(localePath(locale, page)),
+  image: absoluteUrl(assetPath(`og/${locale}.png`)),
+  author: { '@type': 'Organization', name: BRAND },
+  publisher: { '@type': 'Organization', name: BRAND, logo: { '@type': 'ImageObject', url: absoluteUrl(assetPath('icons/icon-512.png')) } },
+  dateModified: '2026-10-01'
+}];
+
+const sections = [
+  { key: 'abilities', label: ms.abilities, emoji: '✨', items: month.abilities, tone: 'bg-amber-50 dark:bg-amber-950/30' },
+  { key: 'challenges', label: ms.challenges, emoji: '🌧️', items: month.challenges, tone: 'bg-sky-50 dark:bg-sky-950/30' },
+  { key: 'exercises', label: ms.exercises, emoji: '🏃', items: month.exercises, tone: 'bg-emerald-50 dark:bg-emerald-950/30' },
+  { key: 'care', label: ms.care, emoji: '❤️', items: month.care, tone: 'bg-rose-50 dark:bg-rose-950/30' }
+].filter(section => section.items.length > 0);
+---
+<Base locale={locale} title={`${title} | ${BRAND}`} description={ms.monthMetaDescription(month.month)} page={page} ogType="article" jsonLd={jsonLd}
+  breadcrumbs={[{ name: ui.nav.milestones, page: '/milestones/' }, { name: title, page }]}>
+  <article class="container-page max-w-4xl py-8 md:py-12">
+    <nav aria-label="Breadcrumb" class="muted text-sm">
+      <ol class="flex flex-wrap items-center gap-1.5">
+        <li><a class="hover:text-pink-600" href={localePath(locale, '/')}>{ui.breadcrumbHome}</a></li>
+        <li aria-hidden="true">/</li>
+        <li><a class="hover:text-pink-600" href={localePath(locale, '/milestones/')}>{ui.nav.milestones}</a></li>
+      </ol>
+    </nav>
+
+    <header class="mt-6 rounded-3xl bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 p-6 text-white shadow-lg sm:p-8">
+      <p class="text-xs font-black uppercase tracking-[0.18em] text-white/80">{ms.monthShort(month.month)}</p>
+      <h1 class="mt-2 text-[clamp(1.8rem,4.5vw,2.5rem)] font-black leading-tight">{title}</h1>
+      <p class="mt-3 max-w-2xl text-lg leading-relaxed text-white/90">{month.summary}</p>
+    </header>
+
+    <nav class="mt-6 flex flex-wrap gap-2" aria-label={ms.allMonths}>
+      {sections.map(section => <a class="chip no-underline" href={`#${section.key}`}>{section.emoji} {section.label}</a>)}
+      <a class="chip no-underline" href="#red-flags">⚠️ {ms.warnings}</a>
+    </nav>
+
+    <div class="mt-8 space-y-8">
+      {sections.map(section => (
+        <section id={section.key} class="card overflow-hidden" aria-labelledby={`h-${section.key}`}>
+          <h2 id={`h-${section.key}`} class={`px-5 py-4 text-xl font-black ${section.tone}`}><span aria-hidden="true">{section.emoji}</span> {section.label}</h2>
+          <ul class="divide-y divide-[var(--nt-line)]">
+            {section.items.map(item => (
+              <li class="px-5 py-4">
+                <h3 class="font-black">{item.title}</h3>
+                <p class="muted mt-1 leading-relaxed">{item.text}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+      <section id="red-flags" class="rounded-3xl border border-red-200 bg-red-50 p-5 text-red-950 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-100" aria-labelledby="h-red-flags">
+        <h2 id="h-red-flags" class="text-xl font-black">⚠️ {ms.warnings}</h2>
+        <ul class="mt-3 list-disc space-y-1.5 ps-5 leading-relaxed">
+          {month.redFlags.map(flag => <li>{flag}</li>)}
+        </ul>
+      </section>
+    </div>
+
+    <p class="notice mt-8 p-5 text-sm leading-relaxed">{ms.rangeNote}</p>
+
+    <section class="card mt-8 flex flex-col gap-4 p-6 sm:flex-row sm:items-center">
+      <div class="flex-1">
+        <p class="text-lg font-black">{ms.trackCta}</p>
+        <p class="muted mt-1 text-sm">{ui.guides.trackCtaText}</p>
+      </div>
+      <a class="btn-primary" href={`${localePath(locale, '/app/')}#development`}>{ui.openApp} →</a>
+    </section>
+
+    <nav class="mt-8 grid gap-3 sm:grid-cols-2" aria-label={ms.allMonths}>
+      {prev ? <a class="card p-4 text-[var(--nt-text)] no-underline hover:border-pink-300" href={localePath(locale, `/milestones/${monthSlug(prev.month)}/`)}><span class="muted text-xs font-bold">← {ms.prev}</span><span class="mt-1 block font-black">{ms.monthTitle(prev.month)}</span></a> : <span />}
+      {next && <a class="card p-4 text-end text-[var(--nt-text)] no-underline hover:border-pink-300" href={localePath(locale, `/milestones/${monthSlug(next.month)}/`)}><span class="muted text-xs font-bold">{ms.next} →</span><span class="mt-1 block font-black">{ms.monthTitle(next.month)}</span></a>}
+    </nav>
+
+    {guides.length > 0 && (
+      <section class="mt-12">
+        <h2 class="text-2xl font-black">{ui.guides.related}</h2>
+        <div class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {guides.map(guide => <GuideCard guide={guide} locale={locale} />)}
+        </div>
+      </section>
+    )}
+    <SupportBanner locale={locale} class="mt-12" />
+  </article>
+</Base>

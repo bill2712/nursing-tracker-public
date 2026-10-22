@@ -1,0 +1,60 @@
+---
+import type { Locale } from '../i18n/locales';
+
+interface Props { locale: Locale; alt: string }
+const { locale, alt } = Astro.props;
+
+// Example numbers shown in the illustration of the tracker's home screen.
+const labels = {
+  en: { overview: 'Today', name: "Mia's day", feed: 'Last feed', feedAgo: '1 h 20 min ago', bath: 'Last sleep', bathAgo: '35 min ago', diaper: 'Last diaper', diaperAgo: '50 min ago', solids: 'Total intake', start: 'Start feeding', startSleep: 'Start sleep', wet: '💧 Wet', dirty: '💩 Dirty', mixed: '✨ Mixed', today: 'Today 6 feeds · 720 ml' },
+  'zh-hant': { overview: '今日概覽', name: '小寶 的照顧', feed: '上次餵奶', feedAgo: '1小時 20分鐘前', bath: '上次睡眠', bathAgo: '35分鐘前', diaper: '上次換片', diaperAgo: '50分鐘前', solids: '今日總食量', start: '開始餵奶', startSleep: '開始睡眠', wet: '💧 濕', dirty: '💩 便便', mixed: '✨ 混合', today: '今日 6 次 · 720 ml' },
+  'zh-hans': { overview: '今日概览', name: '小宝 的照顾', feed: '上次喂奶', feedAgo: '1小时 20分钟前', bath: '上次睡眠', bathAgo: '35分钟前', diaper: '上次换尿布', diaperAgo: '50分钟前', solids: '今日总摄入', start: '开始喂奶', startSleep: '开始睡眠', wet: '💧 尿湿', dirty: '💩 便便', mixed: '✨ 混合', today: '今日 6 次 · 720 ml' },
+  ja: { overview: '今日', name: 'はるちゃんの記録', feed: '前回の授乳', feedAgo: '1時間20分前', bath: '前回の睡眠', bathAgo: '35分前', diaper: '前回のおむつ', diaperAgo: '50分前', solids: '今日の合計', start: '授乳を開始', startSleep: '睡眠を開始', wet: '💧 おしっこ', dirty: '💩 うんち', mixed: '✨ 両方', today: '今日 6回 · 720 ml' }
+}[locale];
+---
+<figure class="relative mx-auto w-full max-w-[20rem]" role="img" aria-label={alt}>
+  <div class="absolute -inset-6 -z-10 rounded-[3rem] bg-gradient-to-br from-pink-200/60 via-fuchsia-100/40 to-indigo-200/60 blur-2xl dark:from-pink-900/30 dark:to-indigo-900/30"></div>
+  <div class="rounded-[2.6rem] border-[10px] border-slate-900 bg-[var(--nt-canvas)] p-3 shadow-2xl dark:border-slate-700" aria-hidden="true">
+    <div class="mb-3 flex items-center gap-2 px-1">
+      <div class="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-pink-100 to-indigo-100 text-lg">👶</div>
+      <div>
+        <p class="text-[9px] font-black uppercase tracking-widest text-pink-600">{labels.overview}</p>
+        <p class="text-sm font-black">{labels.name}</p>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 gap-2">
+      <div class="card !rounded-2xl border-l-4 !border-l-pink-500 p-2.5">
+        <p class="text-[9px] font-bold text-slate-400">{labels.feed}</p>
+        <p class="mt-1 text-sm font-black leading-tight text-pink-600">{labels.feedAgo}</p>
+        <p class="mt-1 text-[10px] font-bold text-slate-500">140 ml</p>
+      </div>
+      <div class="card !rounded-2xl border-l-4 !border-l-indigo-500 p-2.5">
+        <p class="text-[9px] font-bold text-slate-400">{labels.bath}</p>
+        <p class="mt-1 text-sm font-black leading-tight text-indigo-600">{labels.bathAgo}</p>
+        <p class="mt-1 text-[10px] font-bold text-slate-500">1 h 45 min</p>
+      </div>
+      <div class="card !rounded-2xl border-l-4 !border-l-emerald-500 p-2.5">
+        <p class="text-[9px] font-bold text-slate-400">{labels.diaper}</p>
+        <p class="mt-1 text-sm font-black leading-tight text-emerald-600">{labels.diaperAgo}</p>
+        <p class="mt-1 text-[10px] font-bold text-slate-500">5 💧 · 2 💩</p>
+      </div>
+      <div class="card !rounded-2xl border-l-4 !border-l-orange-500 p-2.5">
+        <p class="text-[9px] font-bold text-slate-400">{labels.solids}</p>
+        <p class="mt-1 text-sm font-black leading-tight text-orange-600">760 ml</p>
+        <p class="mt-1 text-[10px] font-bold text-slate-500">{labels.today}</p>
+      </div>
+    </div>
+    <div class="mt-2 grid grid-cols-2 gap-2">
+      <div class="rounded-2xl bg-gradient-to-br from-white to-pink-50 p-3 text-xs font-black shadow-sm dark:from-slate-800 dark:to-pink-950/40">🍼 {labels.start}</div>
+      <div class="rounded-2xl bg-gradient-to-br from-white to-indigo-50 p-3 text-xs font-black shadow-sm dark:from-slate-800 dark:to-indigo-950/40">🌙 {labels.startSleep}</div>
+    </div>
+    <div class="mt-2 grid grid-cols-3 gap-1.5 rounded-2xl bg-emerald-50 p-2 dark:bg-emerald-950/40">
+      <span class="rounded-xl bg-emerald-100 py-2 text-center text-[10px] font-black text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200">{labels.wet}</span>
+      <span class="rounded-xl bg-emerald-100 py-2 text-center text-[10px] font-black text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200">{labels.dirty}</span>
+      <span class="rounded-xl bg-emerald-100 py-2 text-center text-[10px] font-black text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200">{labels.mixed}</span>
+    </div>
+    <div class="mt-3 flex justify-around rounded-2xl bg-white py-2 text-lg shadow-sm dark:bg-slate-800">
+      <span>⏱️</span><span>📋</span><span>📊</span><span>📈</span><span>⚙️</span>
+    </div>
+  </div>
+</figure>

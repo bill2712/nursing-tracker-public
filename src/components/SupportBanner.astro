@@ -1,0 +1,16 @@
+---
+import { SUPPORT_URL, localePath, type Locale } from '../i18n/locales';
+import { useUi } from '../i18n/ui';
+
+interface Props { locale: Locale; class?: string }
+const { locale, class: className = '' } = Astro.props;
+const ui = useUi(locale);
+---
+<aside class={`callout flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:p-6 ${className}`} aria-label={ui.support.title}>
+  <div class="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white text-2xl shadow-sm dark:bg-slate-900" aria-hidden="true">☕</div>
+  <div class="flex-1">
+    <p class="font-black">{ui.support.bannerTitle}</p>
+    <p class="muted mt-1 text-sm">{ui.support.bannerText} <a class="font-bold text-pink-700 underline-offset-2 hover:underline dark:text-pink-300" href={localePath(locale, '/support/')}>{ui.support.title} →</a></p>
+  </div>
+  <a href={SUPPORT_URL} target="_blank" rel="noopener" class="btn-kofi justify-center text-sm" data-support-link><span aria-hidden="true">♥</span>{ui.support.button}</a>
+</aside>

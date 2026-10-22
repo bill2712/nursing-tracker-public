@@ -1,0 +1,157 @@
+---
+import { render } from 'astro:content';
+import Base from '../../../layouts/Base.astro';
+import GuideCard from '../../../components/GuideCard.astro';
+import SupportBanner from '../../../components/SupportBanner.astro';
+import { LOCALES, LOCALE_META, BRAND, langParam, localePath, absoluteUrl, assetPath, type Locale } from '../../../i18n/locales';
+import { useUi } from '../../../i18n/ui';
+import { getGuides, readingMinutes, type Guide } from '../../../lib/guides';
+
+export async function getStaticPaths() {
+  const paths = [];
+  for (const locale of LOCALES) {
+    const guides = await getGuides(locale);
+    for (const guide of guides) paths.push({ params: { lang: langParam(locale), slug: guide.slug }, props: { locale, guide, all: guides } });
+  }
+  return paths;
+}
+
+const { locale, guide, all } = Astro.props as { locale: Locale; guide: Guide; all: Guide[] };
+const ui = useUi(locale);
+const g = ui.guides;
+const { Content, headings } = await render(guide);
+const toc = headings.filter(h => h.depth === 2);
+const related = guide.data.related.map(slug => all.find(item => item.slug === slug)).filter(Boolean) as Guide[];
+const page = `/guides/${guide.slug}/`;
+const url = absoluteUrl(localePath(locale, page));
+const dateFmt = new Intl.DateTimeFormat(LOCALE_META[locale].htmlLang, { year: 'numeric', month: 'long', day: 'numeric' });
+
+const jsonLd: Record<string, unknown>[] = [{
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: guide.data.title,
+  description: guide.data.description,
+  inLanguage: LOCALE_META[locale].htmlLang,
+  datePublished: guide.data.updated.toISOString(),
+  dateModified: guide.data.updated.toISOString(),
+  mainEntityOfPage: url,
+  image: absoluteUrl(assetPath(`og/${locale}.png`)),
+  author: { '@type': 'Organization', name: BRAND, url: absoluteUrl(localePath(locale, '/about/')) },
+  publisher: { '@type': 'Organization', name: BRAND, logo: { '@type': 'ImageObject', url: absoluteUrl(assetPath('icons/icon-512.png')) } },
+  citation: guide.data.sources.map(source => source.url)
+}];
+if (guide.data.faq.length) {
+  jsonLd.push({
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: guide.data.faq.map(item => ({ '@type': 'Question', name: item.q, acceptedAnswer: { '@type': 'Answer', text: item.a } }))
+  });
+}
+---
+<Base locale={locale} title={`${guide.data.title} | ${BRAND}`} description={guide.data.description} page={page} ogType="article" jsonLd={jsonLd}
+  breadcrumbs={[{ name: ui.nav.guides, page: '/guides/' }, { name: guide.data.title, page }]}>
+  <article class="container-page py-8 md:py-12">
+    <nav aria-label="Breadcrumb" class="muted text-sm">
+      <ol class="flex flex-wrap items-center gap-1.5">
+        <li><a class="hover:text-pink-600" href={localePath(locale, '/')}>{ui.breadcrumbHome}</a></li>
+        <li aria-hidden="true">/</li>
+        <li><a class="hover:text-pink-600" href={localePath(locale, '/guides/')}>{ui.nav.guides}</a></li>
+        <li aria-hidden="true">/</li>
+        <li><a class="hover:text-pink-600" href={`${localePath(locale, '/guides/')}#${guide.data.category}`}>{g.categories[guide.data.category]}</a></li>
+      </ol>
+    </nav>
+
+    <div class="mt-6 grid gap-10 lg:grid-cols-[minmax(0,1fr)_17rem]">
+      <div class="min-w-0">
+        <header>
+          <p class="text-4xl" aria-hidden="true">{guide.data.emoji}</p>
+          <h1 class="mt-3 text-[clamp(1.9rem,4.5vw,2.6rem)] font-black leading-tight tracking-tight">{guide.data.title}</h1>
+          <p class="muted mt-3 text-sm font-semibold">
+            {g.updated} <time datetime={guide.data.updated.toISOString()}>{dateFmt.format(guide.data.updated)}</time> · {g.minutesRead(readingMinutes(guide.body ?? '', locale))}
+          </p>
+        </header>
+
+        <aside class="callout mt-6 p-5" aria-label="Summary">
+          <p class="text-base leading-relaxed">{guide.data.summary}</p>
+        </aside>
+
+        {toc.length > 2 && (
+          <details class="card mt-6 p-4 lg:hidden">
+            <summary class="cursor-pointer font-black">{g.onThisPage}</summary>
+            <ol class="mt-3 space-y-1.5 text-sm">
+              {toc.map(h => <li><a class="hover:text-pink-600" href={`#${h.slug}`}>{h.text}</a></li>)}
+            </ol>
+          </details>
+        )}
+
+        <div class="prose prose-nt prose-slate mt-8 max-w-none dark:prose-invert prose-headings:font-black prose-a:font-bold prose-table:text-sm">
+          <Content />
+        </div>
+
+        {guide.data.faq.length > 0 && (
+          <section class="mt-12" aria-labelledby="faq">
+            <h2 id="faq" class="text-2xl font-black">{ui.home.faqTitle}</h2>
+            <div class="mt-5 space-y-3">
+              {guide.data.faq.map(item => (
+                <details class="card group p-5">
+                  <summary class="flex cursor-pointer list-none items-center justify-between gap-4 font-black">{item.q}<span class="text-pink-600 transition-transform group-open:rotate-45" aria-hidden="true">＋</span></summary>
+                  <p class="muted mt-3 leading-relaxed">{item.a}</p>
+                </details>
+              ))}
+            </div>
+          </section>
+        )}
+
+        <div class="notice mt-10 p-5 text-sm leading-relaxed">
+          <p class="font-black">{g.disclaimerTitle}</p>
+          <p class="mt-1">{g.disclaimer}</p>
+        </div>
+
+        {guide.data.sources.length > 0 && (
+          <section class="mt-8">
+            <h2 class="text-lg font-black">{g.sources}</h2>
+            <ul class="mt-3 list-disc space-y-1.5 ps-5 text-sm">
+              {guide.data.sources.map(source => <li><a class="text-pink-700 underline-offset-2 hover:underline dark:text-pink-300" href={source.url} target="_blank" rel="noopener">{source.name}</a></li>)}
+            </ul>
+          </section>
+        )}
+
+        <section class="card mt-10 flex flex-col gap-4 p-6 sm:flex-row sm:items-center">
+          <div class="flex-1">
+            <p class="text-lg font-black">{g.trackCta}</p>
+            <p class="muted mt-1 text-sm">{g.trackCtaText}</p>
+          </div>
+          <a class="btn-primary" href={localePath(locale, '/app/')}>{ui.openApp} →</a>
+        </section>
+      </div>
+
+      <aside class="hidden lg:block">
+        <div class="sticky top-24 space-y-6">
+          {toc.length > 2 && (
+            <nav class="card p-5" aria-label={g.onThisPage}>
+              <p class="text-sm font-black">{g.onThisPage}</p>
+              <ol class="mt-3 space-y-2 text-sm">
+                {toc.map(h => <li><a class="muted hover:text-pink-600" href={`#${h.slug}`}>{h.text}</a></li>)}
+              </ol>
+            </nav>
+          )}
+          <div class="card p-5">
+            <p class="text-sm font-black">{g.trackCta}</p>
+            <p class="muted mt-1 text-xs">{g.trackCtaText}</p>
+            <a class="btn-primary mt-3 w-full !min-h-[2.5rem] text-sm" href={localePath(locale, '/app/')}>{ui.openApp}</a>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    {related.length > 0 && (
+      <section class="mt-14">
+        <h2 class="text-2xl font-black">{g.related}</h2>
+        <div class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {related.map(item => <GuideCard guide={item} locale={locale} />)}
+        </div>
+      </section>
+    )}
+    <SupportBanner locale={locale} class="mt-12" />
+  </article>
+</Base>

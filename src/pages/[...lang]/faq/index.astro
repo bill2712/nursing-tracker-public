@@ -1,0 +1,36 @@
+---
+import Base from '../../../layouts/Base.astro';
+import SupportBanner from '../../../components/SupportBanner.astro';
+import { localeStaticPaths, localePath, type Locale } from '../../../i18n/locales';
+import { useUi } from '../../../i18n/ui';
+
+export const getStaticPaths = localeStaticPaths;
+const { locale } = Astro.props as { locale: Locale };
+const ui = useUi(locale);
+const f = ui.faq;
+const jsonLd = [{
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: f.items.map(item => ({ '@type': 'Question', name: item.q, acceptedAnswer: { '@type': 'Answer', text: item.a } }))
+}];
+---
+<Base locale={locale} title={f.metaTitle} description={f.metaDescription} page="/faq/" jsonLd={jsonLd} breadcrumbs={[{ name: ui.nav.faq, page: '/faq/' }]}>
+  <div class="container-page max-w-3xl py-12">
+    <p class="eyebrow">{ui.nav.faq}</p>
+    <h1 class="section-title mt-3 !text-[clamp(2rem,4.5vw,2.75rem)]">{f.title}</h1>
+    <p class="muted mt-4 text-lg">{f.lead}</p>
+    <div class="mt-10 space-y-4">
+      {f.items.map(item => (
+        <section class="card p-6">
+          <h2 class="text-lg font-black">{item.q}</h2>
+          <p class="muted mt-2 leading-relaxed">{item.a}</p>
+        </section>
+      ))}
+    </div>
+    <div class="mt-10 flex flex-wrap gap-3">
+      <a class="btn-primary" href={localePath(locale, '/app/')}>{ui.openApp} →</a>
+      <a class="btn-secondary" href={localePath(locale, '/guides/')}>{ui.nav.guides}</a>
+    </div>
+    <SupportBanner locale={locale} class="mt-12" />
+  </div>
+</Base>

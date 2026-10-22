@@ -1,0 +1,55 @@
+---
+import { LOCALES, localePath, type Locale } from '../i18n/locales';
+
+interface Props { locale: Locale; page: string }
+const { locale, page } = Astro.props;
+const targets = Object.fromEntries(LOCALES.map(l => [l, localePath(l, page)]));
+// Shown in the suggested language, so the visitor can read it.
+const messages = {
+  en: { text: 'This page is also available in English.', action: 'Switch', dismiss: 'No thanks' },
+  'zh-hant': { text: '本頁提供繁體中文版本。', action: '切換', dismiss: '不用了' },
+  'zh-hans': { text: '本页提供简体中文版本。', action: '切换', dismiss: '不用了' },
+  ja: { text: 'このページは日本語でもご覧いただけます。', action: '切り替える', dismiss: '閉じる' }
+};
+---
+<div id="nt-lang-suggest" class="hidden border-b border-[var(--nt-line)] bg-indigo-50 text-indigo-950 dark:bg-indigo-950/60 dark:text-indigo-100" role="region" aria-live="polite">
+  <div class="container-page flex flex-wrap items-center gap-3 py-2.5 text-sm font-semibold">
+    <span data-text class="mr-auto"></span>
+    <a data-action class="rounded-lg bg-indigo-600 px-3 py-1.5 font-bold text-white no-underline"></a>
+    <button type="button" data-dismiss class="rounded-lg px-2 py-1.5 font-bold opacity-80"></button>
+  </div>
+</div>
+<script is:inline define:vars={{ current: locale, targets, messages }}>
+  (function () {
+    try {
+      if (localStorage.getItem('nt-locale') || sessionStorage.getItem('nt-lang-dismissed')) return;
+      var pick = function (tag) {
+        tag = String(tag || '').toLowerCase();
+        if (tag.indexOf('zh') === 0) {
+          return /hant|tw|hk|mo/.test(tag) ? 'zh-hant' : 'zh-hans';
+        }
+        if (tag.indexOf('ja') === 0) return 'ja';
+        if (tag.indexOf('en') === 0) return 'en';
+        return null;
+      };
+      var langs = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language];
+      var suggested = null;
+      for (var i = 0; i < langs.length && !suggested; i++) suggested = pick(langs[i]);
+      if (!suggested || suggested === current) return;
+      var box = document.getElementById('nt-lang-suggest');
+      var m = messages[suggested];
+      box.querySelector('[data-text]').textContent = m.text;
+      var action = box.querySelector('[data-action]');
+      action.textContent = m.action;
+      action.href = targets[suggested];
+      action.addEventListener('click', function () { localStorage.setItem('nt-locale', suggested); });
+      var dismiss = box.querySelector('[data-dismiss]');
+      dismiss.textContent = m.dismiss;
+      dismiss.addEventListener('click', function () {
+        localStorage.setItem('nt-locale', current);
+        box.classList.add('hidden');
+      });
+      box.classList.remove('hidden');
+    } catch (e) {}
+  })();
+</script>

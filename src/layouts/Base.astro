@@ -1,0 +1,113 @@
+---
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import LanguageSuggest from '../components/LanguageSuggest.astro';
+import {
+  LOCALES, LOCALE_META, BRAND, DEFAULT_LOCALE, localePath, absoluteUrl, assetPath, type Locale
+} from '../i18n/locales';
+import { useUi } from '../i18n/ui';
+
+interface Crumb { name: string; page: string }
+
+interface Props {
+  locale: Locale;
+  title: string;
+  description: string;
+  /** Locale-neutral path of this page, e.g. "/guides/newborn-sleep/". */
+  page: string;
+  jsonLd?: Record<string, unknown>[];
+  ogType?: 'website' | 'article';
+  noindex?: boolean;
+  variant?: 'default' | 'app';
+  breadcrumbs?: Crumb[];
+}
+
+const { locale, title, description, page, jsonLd = [], ogType = 'website', noindex = false, variant = 'default', breadcrumbs } = Astro.props;
+const ui = useUi(locale);
+const meta = LOCALE_META[locale];
+const canonical = absoluteUrl(localePath(locale, page));
+const ogImage = absoluteUrl(assetPath(`og/${locale}.png`));
+
+const structured: Record<string, unknown>[] = [...jsonLd];
+if (breadcrumbs?.length) {
+  structured.push({
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [{ name: ui.breadcrumbHome, page: '/' }, ...breadcrumbs].map((crumb, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: crumb.name,
+      item: absoluteUrl(localePath(locale, crumb.page))
+    }))
+  });
+}
+---
+<!doctype html>
+<html lang={meta.htmlLang} dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex, follow" />}
+    {!noindex && LOCALES.map(alt => (
+      <link rel="alternate" hreflang={LOCALE_META[alt].hreflang} href={absoluteUrl(localePath(alt, page))} />
+    ))}
+    {!noindex && <link rel="alternate" hreflang="x-default" href={absoluteUrl(localePath(DEFAULT_LOCALE, page))} />}
+
+    <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content={BRAND} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content={meta.ogLocale} />
+    {LOCALES.filter(alt => alt !== locale).map(alt => <meta property="og:locale:alternate" content={LOCALE_META[alt].ogLocale} />)}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <link rel="icon" href={assetPath('favicon.svg')} type="image/svg+xml" />
+    <link rel="apple-touch-icon" href={assetPath('icons/apple-touch-icon.png')} />
+    <link rel="manifest" href={assetPath('manifest.webmanifest')} />
+    <link rel="sitemap" href={assetPath('sitemap-index.xml')} />
+    <meta name="theme-color" content="#f7f8fc" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0b1020" media="(prefers-color-scheme: dark)" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content={BRAND} />
+    <meta name="format-detection" content="telephone=no" />
+
+    <script is:inline>
+      // Apply the saved theme before paint so there is no flash.
+      (function () {
+        try {
+          var theme = localStorage.getItem('nt-theme');
+          var dark = theme ? theme === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (dark) document.documentElement.classList.add('dark');
+        } catch (e) {}
+      })();
+    </script>
+    {structured.map(data => <script type="application/ld+json" set:html={JSON.stringify(data)} />)}
+  </head>
+  <body class={variant === 'app' ? 'min-h-[100dvh]' : 'flex min-h-screen flex-col'}>
+    <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[60] focus:rounded-xl focus:bg-white focus:px-4 focus:py-2 focus:font-bold focus:text-pink-700">{ui.skipToContent}</a>
+    <Header locale={locale} page={page} compact={variant === 'app'} />
+    {variant !== 'app' && <LanguageSuggest locale={locale} page={page} />}
+    <main id="main" class={variant === 'app' ? '' : 'flex-1'}>
+      <slot />
+    </main>
+    {variant !== 'app' && <Footer locale={locale} page={page} />}
+    <script is:inline define:vars={{ swUrl: assetPath('sw.js'), scope: `${assetPath('')}` }}>
+      if ('serviceWorker' in navigator && location.hostname !== 'localhost') {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register(swUrl, { scope: scope }).catch(function () {});
+        });
+      }
+    </script>
+  </body>
+</html>

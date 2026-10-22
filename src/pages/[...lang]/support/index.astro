@@ -1,0 +1,40 @@
+---
+import Base from '../../../layouts/Base.astro';
+import { localeStaticPaths, localePath, SUPPORT_URL, REPO_URL, type Locale } from '../../../i18n/locales';
+import { useUi } from '../../../i18n/ui';
+
+export const getStaticPaths = localeStaticPaths;
+const { locale } = Astro.props as { locale: Locale };
+const ui = useUi(locale);
+const s = ui.support;
+---
+<Base locale={locale} title={s.metaTitle} description={s.metaDescription} page="/support/" breadcrumbs={[{ name: ui.nav.support, page: '/support/' }]}>
+  <section class="hero-bg">
+    <div class="container-page max-w-3xl py-14 text-center">
+      <div class="mx-auto grid h-16 w-16 place-items-center rounded-3xl bg-white text-4xl shadow-sm dark:bg-slate-900" aria-hidden="true">☕</div>
+      <p class="eyebrow mt-6">{s.eyebrow}</p>
+      <h1 class="section-title mt-3 !text-[clamp(2rem,4.5vw,2.75rem)]">{s.title}</h1>
+      <p class="muted mx-auto mt-4 max-w-xl text-lg">{s.lead}</p>
+      <a href={SUPPORT_URL} target="_blank" rel="noopener" class="btn-kofi mt-8 !min-h-[3.2rem] !px-7 text-lg" data-support-link><span aria-hidden="true">♥</span>{s.button}</a>
+    </div>
+  </section>
+  <div class="container-page max-w-3xl py-10">
+    <div class="space-y-4 text-lg leading-relaxed">
+      {s.body.map(p => <p>{p}</p>)}
+    </div>
+    <h2 class="mt-12 text-2xl font-black">{s.otherWaysTitle}</h2>
+    <ul class="mt-5 space-y-3">
+      {s.otherWays.map((way, index) => (
+        <li class="card flex gap-3 p-4">
+          <span class="text-xl" aria-hidden="true">{['💬', '🛠️', '✍️'][index] ?? '✓'}</span>
+          <span class="leading-relaxed">{way}</span>
+        </li>
+      ))}
+    </ul>
+    <div class="mt-8 flex flex-wrap gap-3">
+      <a class="btn-secondary" href={`${REPO_URL}/issues`} target="_blank" rel="noopener">GitHub</a>
+      <a class="btn-primary" href={localePath(locale, '/app/')}>{ui.openApp} →</a>
+    </div>
+    <p class="muted mt-10 text-center font-bold">{s.thanks} 💛</p>
+  </div>
+</Base>

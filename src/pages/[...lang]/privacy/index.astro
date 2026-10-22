@@ -1,0 +1,25 @@
+---
+import Base from '../../../layouts/Base.astro';
+import { localeStaticPaths, type Locale } from '../../../i18n/locales';
+import { useUi } from '../../../i18n/ui';
+
+export const getStaticPaths = localeStaticPaths;
+const { locale } = Astro.props as { locale: Locale };
+const ui = useUi(locale);
+const p = ui.privacy;
+---
+<Base locale={locale} title={p.metaTitle} description={p.metaDescription} page="/privacy/" breadcrumbs={[{ name: ui.nav.privacy, page: '/privacy/' }]}>
+  <article class="container-page max-w-3xl py-12">
+    <p class="eyebrow">{ui.nav.privacy}</p>
+    <h1 class="section-title mt-3 !text-[clamp(2rem,4.5vw,2.75rem)]">{p.title}</h1>
+    <p class="muted mt-3 text-sm font-bold">{p.updated}</p>
+    <div class="mt-8 space-y-8">
+      {p.sections.map(section => (
+        <section>
+          <h2 class="text-xl font-black">{section.h}</h2>
+          {section.p.map(text => <p class="mt-3 leading-relaxed">{text}</p>)}
+        </section>
+      ))}
+    </div>
+  </article>
+</Base>

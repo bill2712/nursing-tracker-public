@@ -1,0 +1,44 @@
+---
+import Base from '../../../../layouts/Base.astro';
+import ToolShell from '../../../../components/ToolShell.astro';
+import FormulaCalculator from '../../../../tools/FormulaCalculator';
+import { localeStaticPaths, localePath, absoluteUrl, LOCALE_META, BRAND, type Locale } from '../../../../i18n/locales';
+import { useUi } from '../../../../i18n/ui';
+import { getGuides, type Guide } from '../../../../lib/guides';
+
+export const getStaticPaths = localeStaticPaths;
+const { locale } = Astro.props as { locale: Locale };
+const ui = useUi(locale);
+const f = ui.tools.formula;
+const all = await getGuides(locale);
+const guides = ['how-much-milk-does-a-newborn-need', 'burping-and-spit-up'].map(s => all.find(g => g.slug === s)).filter(Boolean) as Guide[];
+const labels = { weight: f.weight, age: f.age, ageUnit: f.ageUnit, feeds: f.feeds, dailyTotal: f.dailyTotal, perFeed: f.perFeed, range: f.range, perDay: f.perDay, months: Array.from({ length: 12 }, (_, n) => ui.milestones.monthShort(n)) };
+const jsonLd = [{
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: f.title,
+  url: absoluteUrl(localePath(locale, '/tools/formula-calculator/')),
+  applicationCategory: 'HealthApplication',
+  operatingSystem: 'Any (web browser)',
+  isAccessibleForFree: true,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  inLanguage: LOCALE_META[locale].htmlLang,
+  description: f.metaDescription,
+  publisher: { '@type': 'Organization', name: BRAND }
+}];
+---
+<Base locale={locale} title={f.metaTitle} description={f.metaDescription} page="/tools/formula-calculator/" jsonLd={jsonLd}
+  breadcrumbs={[{ name: ui.nav.tools, page: '/tools/' }, { name: f.title, page: '/tools/formula-calculator/' }]}>
+  <ToolShell locale={locale} title={f.title} lead={f.lead} guides={guides}>
+    <FormulaCalculator slot="tool" client:load labels={labels} defaultUnit={locale === 'en' ? 'imperial' : 'metric'} />
+    <section>
+      <h2 class="text-2xl font-black">{f.howTitle}</h2>
+      <ul class="mt-4 list-disc space-y-2 ps-5">{f.how.map(item => <li>{item}</li>)}</ul>
+      <p class="muted mt-4 text-sm">{f.note}</p>
+    </section>
+    <section>
+      <h2 class="text-2xl font-black">{f.cuesTitle}</h2>
+      <ul class="mt-4 list-disc space-y-2 ps-5">{f.cues.map(item => <li>{item}</li>)}</ul>
+    </section>
+  </ToolShell>
+</Base>

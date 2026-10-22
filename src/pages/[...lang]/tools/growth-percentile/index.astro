@@ -1,0 +1,50 @@
+---
+import Base from '../../../../layouts/Base.astro';
+import ToolShell from '../../../../components/ToolShell.astro';
+import GrowthCalculator from '../../../../tools/GrowthCalculator';
+import { localeStaticPaths, localePath, absoluteUrl, LOCALE_META, BRAND, type Locale } from '../../../../i18n/locales';
+import { useUi } from '../../../../i18n/ui';
+import { getGuides, type Guide } from '../../../../lib/guides';
+
+export const getStaticPaths = localeStaticPaths;
+const { locale } = Astro.props as { locale: Locale };
+const ui = useUi(locale);
+const g = ui.tools.growth;
+const all = await getGuides(locale);
+const guides = ['who-growth-charts-explained', 'how-much-milk-does-a-newborn-need'].map(s => all.find(x => x.slug === s)).filter(Boolean) as Guide[];
+const labels = {
+  sex: g.sex, boy: g.boy, girl: g.girl, birthDate: g.birthDate, measureDate: g.measureDate, weight: g.weight, length: g.length,
+  head: g.head, optional: g.optional, result: g.result, ageTemplate: g.ageResult('{months}'), percentileTemplate: g.percentileText('{p}'),
+  explainTitle: g.explainTitle, explainTemplate: g.explain('{p}'), outOfRange: g.outOfRange, ageOutOfRange: g.ageOutOfRange
+};
+const jsonLd = [{
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: g.title,
+  url: absoluteUrl(localePath(locale, '/tools/growth-percentile/')),
+  applicationCategory: 'HealthApplication',
+  operatingSystem: 'Any (web browser)',
+  isAccessibleForFree: true,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  inLanguage: LOCALE_META[locale].htmlLang,
+  description: g.metaDescription,
+  publisher: { '@type': 'Organization', name: BRAND }
+}];
+---
+<Base locale={locale} title={g.metaTitle} description={g.metaDescription} page="/tools/growth-percentile/" jsonLd={jsonLd}
+  breadcrumbs={[{ name: ui.nav.tools, page: '/tools/' }, { name: g.title, page: '/tools/growth-percentile/' }]}>
+  <ToolShell locale={locale} title={g.title} lead={g.lead} guides={guides}>
+    <div slot="tool">
+      <GrowthCalculator client:only="react" labels={labels} defaultUnit={locale === 'en' ? 'imperial' : 'metric'} />
+      <noscript><p class="card p-5">{ui.appPage.noscript}</p></noscript>
+    </div>
+    <section>
+      <h2 class="text-2xl font-black">{g.explainTitle}</h2>
+      <p class="mt-3">{g.explain('25').replace('25', '25')}</p>
+    </section>
+    <section>
+      <h2 class="text-2xl font-black">{g.aboutTitle}</h2>
+      <ul class="mt-4 list-disc space-y-2 ps-5">{g.about.map(item => <li>{item}</li>)}</ul>
+    </section>
+  </ToolShell>
+</Base>
